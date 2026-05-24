@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gaspar Tomasello</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Archivo:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #ecebe6;        /* papel claro, calmo */
+    --ink: #1a1a18;
+    --paper: #ffffff;
+    --accent: #c8492b;    /* terracota apagado, menos grito */
+    --dim: #8d8a82;
+    --line: rgba(26,26,24,0.14);
+    --grotesk: 'Archivo', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--grotesk);
+    overflow: hidden;
+  }
+
+  #bg-canvas { position: fixed; inset: 0; z-index: 0; }
+
+  #deck { position: relative; z-index: 1; height: 100%; width: 100%; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(2.5rem, 10vw, 11rem);
+    padding-bottom: 6rem;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+  }
+  .slide.active { display: flex; opacity: 1; }
+
+  /* etiqueta sobria: mono, chica, con guion */
+  .tag {
+    font-family: var(--mono);
+    font-size: clamp(0.7rem, 1vw, 0.8rem);
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 2.4rem;
+  }
+  .tag::before { content: "— "; }
+
+  h1 {
+    font-family: var(--grotesk);
+    font-weight: 400;
+    font-size: clamp(2.4rem, 6vw, 4.8rem);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+  }
+
+  .role {
+    font-family: var(--mono);
+    font-size: clamp(0.82rem, 1.3vw, 1rem);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    margin-top: 2rem;
+  }
+
+  .body {
+    font-family: var(--grotesk);
+    font-weight: 300;
+    font-size: clamp(1.1rem, 1.7vw, 1.55rem);
+    line-height: 1.62;
+    max-width: 50ch;
+    color: var(--ink);
+  }
+  .body.intro { margin-top: 2.4rem; max-width: 46ch; }
+  .body + .body { margin-top: 1.3rem; }
+  .body b { font-weight: 500; color: var(--ink); border-bottom: 1.5px solid var(--accent); }
+
+  /* frase poética del cierre del sketch */
+  .poetic {
+    font-family: var(--grotesk);
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(1.3rem, 2.4vw, 2.1rem);
+    line-height: 1.4;
+    max-width: 30ch;
+    color: var(--ink);
+  }
+
+  /* layout con obra: mucho aire entre texto y pieza */
+  .with-art { flex-direction: row; gap: clamp(2.5rem, 7vw, 7rem); align-items: center; }
+  .with-art .col-text { flex: 1; min-width: 0; }
+  .with-art .col-art { flex-shrink: 0; }
+
+  /* marco sobrio: borde fino, esquina con label discreto */
+  .frame {
+    border: 1px solid var(--line);
+    background: #000;
+    width: clamp(300px, 52vh, 560px);
+    aspect-ratio: 1 / 1;
+  }
+  .frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+  .art-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    margin-top: 0.8rem;
+    text-transform: lowercase;
+  }
+
+  .art-pair { display: flex; gap: 1.4rem; flex-wrap: wrap; align-items: center; }
+  .art-pair .frame { width: clamp(220px, 32vh, 340px); }
+  /* obras locales dentro del par: altura pareja, sin recorte */
+  .art-img {
+    display: block;
+    border: 1px solid var(--line);
+    max-height: 46vh;
+    width: auto;
+    max-width: 100%;
+  }
+  .art-img.art-tall { max-height: 52vh; }
+  .art-img.art-portrait { max-height: 64vh; }
+
+  /* slide del meme: todo centrado en columna, imagen completa + pie de foto */
+  .slide[data-mode="meme"] { align-items: center; justify-content: center; }
+  .slide[data-mode="meme"] .tag { align-self: center; }
+  .meme-stack { display: flex; flex-direction: column; align-items: center; max-width: 560px; }
+  .meme-img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: min(62vh, 82vw);
+    max-height: 62vh;
+    border: 1px solid var(--line);
+    image-rendering: auto;
+  }
+  .meme-caption {
+    font-family: var(--grotesk);
+    font-weight: 400;
+    font-size: clamp(1rem, 1.6vw, 1.35rem);
+    line-height: 1.45;
+    text-align: center;
+    margin-top: 1.4rem;
+    max-width: 42ch;
+    color: var(--ink);
+  }
+
+  #hud {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.3rem clamp(2.5rem, 10vw, 11rem);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    pointer-events: none;
+  }
+  #counter b { color: var(--accent); font-weight: 500; }
+
+  #progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 4;
+    transition: width 0.6s ease;
+  }
+
+  .nav-zone { position: fixed; top: 0; bottom: 0; width: 16%; z-index: 2; cursor: pointer; }
+  .nav-zone.left { left: 0; }
+  .nav-zone.right { right: 0; }
+
+  @media (max-width: 860px) {
+    .with-art { flex-direction: column; align-items: flex-start; justify-content: center; overflow-y: auto; gap: 2rem; }
+    .frame { width: min(72vw, 320px); }
+  }
+</style>
+</head>
+<body>
+
+  <div id="bg-canvas"></div>
+  <div id="progress"></div>
+
+  <div id="deck">
+
+    <!-- 1 · PORTADA + QUIÉN SOY + KINDERSZENEN -->
+    <section class="slide with-art active" data-mode="dots">
+      <div class="col-text">
+        <div class="tag">CCC · UNQ — Arte Digital Aplicado</div>
+        <h1>Gaspar Tomasello</h1>
+        <div class="role">Artista visual y docente</div>
+        <p class="body intro">Elegí la carrera porque es lo que más se acerca a mi búsqueda artística y profesional. Me interesa el cruce entre arte/tecnología, lo analógico/digital, la combinación de sus procesos.</p>
+      </div>
+      <div class="col-art">
+        <div class="frame">
+          <iframe
+            src="https://assets.objkt.media/file/assets-003/QmcAdEerZiG5gye49EgvwhtsiadSq6V6ZbTrVeTaqUTEWE/artifact"
+            loading="lazy" allowfullscreen title="Kinderszenen"></iframe>
+        </div>
+        <div class="art-label">kinderszenen</div>
+      </div>
+    </section>
+
+    <!-- 2 · LADO ARTÍSTICO + AUTORRETRATO -->
+    <section class="slide with-art" data-mode="lines">
+      <div class="col-text">
+        <div class="tag">Lo artístico</div>
+        <p class="body">Me formé en la <b>Escuela de Bellas Artes Manuel Belgrano</b>. Actualmente tengo un taller de gráfica (grabado).</p>
+        <p class="body">Me interesa el cruce entre lo analógico y lo digital, la combinación de sus procesos. Esta obra es un autorretrato.</p>
+      </div>
+      <div class="col-art">
+        <img class="art-img art-portrait" src="obras/autorretrato.gif" alt="Autorretrato — Gaspar Tomasello" />
+        <div class="art-label">autorretrato</div>
+      </div>
+    </section>
+
+    <!-- 4 · EDUCADOR + NIÑO DIBUJANDO -->
+    <section class="slide with-art" data-mode="squares">
+      <div class="col-text">
+        <div class="tag">Mi rol como educador</div>
+        <p class="body">Realicé una formación pedagógica en <b>Educación por el Arte</b> en el IVA. Trabajo en educación pública en CABA: en nivel primario soy profesor de Artes Visuales; en nivel secundario doy clases en las Escuelas de Bellas Artes <b>Lola Mora</b> y <b>Rogelio Yrurtia</b>, donde dicto Historia del Arte y Morfología, y tengo a cargo horas de taller de grabado, pintura y escultura.</p>
+        <p class="body">Viajé dando talleres de muralismo comunitario. Durante la pandemia trabajé en animación y arte digital, colaborando con organismos de DDHH.</p>
+      </div>
+      <div class="col-art">
+        <img class="art-img art-portrait" src="obras/nino-dibuja.gif" alt="Niño dibujando — obra de Gaspar Tomasello" />
+        <div class="art-label">niño dibujando</div>
+      </div>
+    </section>
+
+    <!-- 5 · TECNOLOGÍA + SKETCH INTERACTIVO -->
+    <section class="slide" data-mode="nodes">
+      <div class="tag">Mi relación con la tecnología</div>
+      <p class="body">Soy profesor de <b>Tecnología, Diseño y Programación</b>. Programamos con mis estudiantes proyectos con Arduino, pensando soluciones a problemáticas ambientales y de accesibilidad.</p>
+    </section>
+
+    <!-- 6 · MEME DEL PERRO -->
+    <section class="slide" data-mode="meme" data-anim="rings">
+      <div class="tag">Bonus</div>
+      <div class="meme-stack">
+        <img class="meme-img" src="obras/perro.gif" alt="Perro — obra de Gaspar Tomasello" />
+        <p class="meme-caption">Yo, cuando me dicen que tengo que aprender a programar de 0 después de haber vibecodeado esta presentación.</p>
+      </div>
+    </section>
+
+    <!-- 7 · CIERRE -->
+    <section class="slide with-art" data-mode="grid">
+      <div class="col-text">
+        <div class="tag">Contacto</div>
+        <h1>Gracias</h1>
+        <div class="role">gaspar.tomasello@gmail.com<br>IG · @gaspartomasello</div>
+      </div>
+      <div class="col-art">
+        <img class="art-img art-portrait" src="obras/gato.gif" alt="Gato — obra de Gaspar Tomasello" />
+        <div class="art-label">gato</div>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="hud">
+    <div id="counter"><b>01</b> / 06</div>
+    <div>← →  navegar · F  pantalla completa</div>
+  </div>
+
+  <div class="nav-zone left"  onclick="prevSlide()"></div>
+  <div class="nav-zone right" onclick="nextSlide()"></div>
+
+<script>
+let slides = [];
+let current = 0;
+function showSlide(i) {
+  slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+  current = i;
+  const total = slides.length;
+  document.querySelector('#counter').innerHTML =
+    `<b>${String(i + 1).padStart(2, '0')}</b> / ${String(total).padStart(2, '0')}`;
+  document.querySelector('#progress').style.width = `${((i + 1) / total) * 100}%`;
+  window._slideMode = slides[i].dataset.anim || slides[i].dataset.mode;
+}
+function nextSlide() { if (current < slides.length - 1) showSlide(current + 1); }
+function prevSlide() { if (current > 0) showSlide(current - 1); }
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+  if (e.key === 'ArrowLeft') prevSlide();
+  if (e.key === 'f' || e.key === 'F') {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+window.addEventListener('DOMContentLoaded', () => {
+  slides = Array.from(document.querySelectorAll('.slide'));
+  showSlide(0);
+});
+
+/* ============================================================
+   FONDO MULTI-ANIMACIÓN
+   Cada slide tiene su propio comportamiento interactivo:
+   - lines   (portada): líneas que ondulan y se curvan con el mouse
+   - squares (quién soy): cuadrados que se repelen del mouse
+   - tech    (tecnología): puntos que se agrupan hacia el mouse (constelación)
+   - grid    (cierre): grilla que se distorsiona suave al pasar el mouse
+   - embed   (obras): casi quieto, no compite con los videos
+   ============================================================ */
+const bgSketch = (p) => {
+  let lines = [], squares = [], dots = [], grid = [], nodes = [];
+
+  p.setup = () => {
+    const c = p.createCanvas(p.windowWidth, p.windowHeight);
+    c.parent('bg-canvas');
+    build();
+  };
+
+  function build() {
+    // líneas
+    lines = [];
+    const NL = 26;
+    for (let i = 0; i < NL; i++)
+      lines.push({ y: (p.height / (NL + 1)) * (i + 1), phase: p.random(p.TWO_PI) });
+
+    // cuadrados en grilla
+    squares = [];
+    const STEP = 50;
+    for (let x = STEP; x < p.width; x += STEP)
+      for (let y = STEP; y < p.height; y += STEP)
+        squares.push({ x, y });
+
+    // puntos sueltos para la constelación
+    dots = [];
+    const ND = 90;
+    for (let i = 0; i < ND; i++)
+      dots.push({ x: p.random(p.width), y: p.random(p.height),
+                  vx: p.random(-0.25, 0.25), vy: p.random(-0.25, 0.25) });
+
+    // grilla de cruces
+    grid = [];
+    const GS = 60;
+    for (let x = GS; x < p.width; x += GS)
+      for (let y = GS; y < p.height; y += GS)
+        grid.push({ x, y });
+
+    // nodos para la red (tecnología)
+    nodes = [];
+    const NN = 40;
+    for (let i = 0; i < NN; i++) {
+      const bx = p.random(p.width), by = p.random(p.height);
+      nodes.push({ bx, by, x: bx, y: by, ph: p.random(p.TWO_PI) });
+    }
+  }
+
+  const INK = [26, 26, 24];
+
+  p.draw = () => {
+    p.clear();
+    const mode = window._slideMode || 'lines';
+    if (mode === 'lines')        drawLines(true);
+    else if (mode === 'squares') drawSquares();
+    else if (mode === 'dots')    drawDots();
+    else if (mode === 'tech')    drawDots();
+    else if (mode === 'nodes')   drawNodes();
+    else if (mode === 'rings')   drawRings();
+    else if (mode === 'grid')    drawGrid();
+    else if (mode === 'embed')   drawLines(false);
+    else                         drawLines(true);
+  };
+
+  // --- 1. LÍNEAS ondulantes ---
+  function drawLines(reacts) {
+    const t = p.frameCount * 0.012;
+    p.noFill();
+    for (let ln of lines) {
+      p.stroke(...INK, reacts ? 40 : 14);
+      p.strokeWeight(0.8);
+      p.beginShape();
+      for (let x = 0; x <= p.width; x += 18) {
+        let y = ln.y + p.sin(x * 0.006 + ln.phase + t) * (reacts ? 12 : 6);
+        if (reacts) {
+          const dx = x - p.mouseX, dy = ln.y - p.mouseY;
+          const d = p.sqrt(dx*dx + dy*dy) + 0.001;
+          if (d < 180) y += (dy / d) * (180 - d) * 0.32;
+        }
+        p.vertex(x, y);
+      }
+      p.endShape();
+    }
+  }
+
+  // --- 2. CUADRADOS que se repelen ---
+  function drawSquares() {
+    p.noStroke();
+    for (let s of squares) {
+      let ox = 0, oy = 0, sz = 3;
+      const dx = s.x - p.mouseX, dy = s.y - p.mouseY;
+      const d = p.sqrt(dx*dx + dy*dy) + 0.001;
+      if (d < 160) {
+        const f = (160 - d) / 160;
+        ox = (dx / d) * f * 30;
+        oy = (dy / d) * f * 30;
+        sz = 3 + f * 8;
+      }
+      p.fill(...INK, 42);
+      p.rect(s.x + ox, s.y + oy, sz, sz);
+    }
+  }
+
+  // --- 3. PUNTOS que se agrupan (constelación) ---
+  function drawDots() {
+    // atracción suave hacia el mouse + deriva
+    for (let pt of dots) {
+      const dx = p.mouseX - pt.x, dy = p.mouseY - pt.y;
+      const d = p.sqrt(dx*dx + dy*dy) + 0.001;
+      if (d < 260) { pt.vx += (dx/d) * 0.06; pt.vy += (dy/d) * 0.06; }
+      pt.x += pt.vx; pt.y += pt.vy;
+      pt.vx *= 0.95; pt.vy *= 0.95;
+      if (pt.x < 0) pt.x = p.width;  if (pt.x > p.width) pt.x = 0;
+      if (pt.y < 0) pt.y = p.height; if (pt.y > p.height) pt.y = 0;
+    }
+    // líneas entre puntos cercanos
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const a = dots[i], b = dots[j];
+        const dd = p.dist(a.x, a.y, b.x, b.y);
+        if (dd < 96) {
+          p.stroke(...INK, p.map(dd, 0, 96, 55, 0));
+          p.strokeWeight(0.5);
+          p.line(a.x, a.y, b.x, b.y);
+        }
+      }
+    }
+    p.noStroke();
+    for (let pt of dots) { p.fill(...INK, 120); p.circle(pt.x, pt.y, 3); }
+  }
+
+  // --- 4. GRILLA de cruces que se distorsiona ---
+  function drawGrid() {
+    p.stroke(...INK, 50);
+    p.strokeWeight(0.9);
+    for (let g of grid) {
+      let ox = 0, oy = 0, r = 3;
+      const dx = g.x - p.mouseX, dy = g.y - p.mouseY;
+      const d = p.sqrt(dx*dx + dy*dy) + 0.001;
+      if (d < 150) {
+        const f = (150 - d) / 150;
+        ox = -(dx / d) * f * 16;  // se atraen hacia el mouse
+        oy = -(dy / d) * f * 16;
+        r = 3 + f * 5;
+      }
+      const cx = g.x + ox, cy = g.y + oy;
+      p.line(cx - r, cy, cx + r, cy);
+      p.line(cx, cy - r, cx, cy + r);
+    }
+  }
+
+  // --- 5. RED DE NODOS: nodos fijos que se enlazan al mouse (tecnología) ---
+  function drawNodes() {
+    // dibuja conexiones desde el mouse a los nodos cercanos + entre nodos vecinos
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      // leve respiración
+      n.x = n.bx + p.sin(p.frameCount * 0.01 + n.ph) * 6;
+      n.y = n.by + p.cos(p.frameCount * 0.01 + n.ph) * 6;
+    }
+    // enlaces entre nodos cercanos
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const d = p.dist(nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y);
+        if (d < 120) {
+          p.stroke(...INK, p.map(d, 0, 120, 40, 0));
+          p.strokeWeight(0.5);
+          p.line(nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y);
+        }
+      }
+    }
+    // enlaces vivos desde el mouse
+    for (let n of nodes) {
+      const d = p.dist(n.x, n.y, p.mouseX, p.mouseY);
+      if (d < 200) {
+        p.stroke(200, 60, 40, p.map(d, 0, 200, 180, 0)); // acento cálido
+        p.strokeWeight(0.9);
+        p.line(p.mouseX, p.mouseY, n.x, n.y);
+      }
+    }
+    p.noStroke();
+    for (let n of nodes) {
+      const d = p.dist(n.x, n.y, p.mouseX, p.mouseY);
+      const big = d < 200;
+      p.fill(...INK, big ? 200 : 90);
+      p.circle(n.x, n.y, big ? 5 : 3);
+    }
+  }
+
+  // --- 6. ANILLOS concéntricos que laten desde el cursor (perro/bonus) ---
+  function drawRings() {
+    p.noFill();
+    const t = p.frameCount * 0.02;
+    for (let i = 0; i < 6; i++) {
+      const phase = (t + i / 6) % 1;
+      const r = phase * 420;
+      p.stroke(...INK, (1 - phase) * 40);
+      p.strokeWeight(1);
+      p.circle(p.mouseX, p.mouseY, r * 2);
+    }
+    // puntos ambientales fijos, tenues
+    p.noStroke();
+    for (let d of dots) { p.fill(...INK, 16); p.circle(d.x, d.y, 2.5); }
+  }
+
+  p.windowResized = () => { p.resizeCanvas(p.windowWidth, p.windowHeight); build(); };
+};
+new p5(bgSketch);
+</script>
+</body>
+</html>
