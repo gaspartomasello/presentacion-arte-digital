@@ -39,8 +39,8 @@
     display: none;
     flex-direction: column;
     justify-content: center;
-    padding: clamp(2.5rem, 10vw, 11rem);
-    padding-bottom: 6rem;
+    padding: clamp(2rem, 5vw, 5.5rem) clamp(2.5rem, 7vw, 7rem);
+    padding-bottom: 5rem;
     opacity: 0;
     transition: opacity 0.7s ease;
   }
@@ -75,6 +75,19 @@
     margin-top: 2rem;
   }
 
+  /* texto de despedida en el cierre */
+  .body.closing { max-width: 40ch; margin-bottom: 0.5rem; }
+
+  /* crédito chiquito al pie del cierre */
+  .credit {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--dim);
+    opacity: 0.7;
+    margin-top: 2.2rem;
+  }
+
   .body {
     font-family: var(--grotesk);
     font-weight: 300;
@@ -99,7 +112,7 @@
   }
 
   /* layout con obra: mucho aire entre texto y pieza */
-  .with-art { flex-direction: row; gap: clamp(2.5rem, 7vw, 7rem); align-items: center; }
+  .with-art { flex-direction: row; gap: clamp(1.5rem, 3.5vw, 3.5rem); align-items: center; justify-content: space-between; }
   .with-art .col-text { flex: 1; min-width: 0; }
   .with-art .col-art { flex-shrink: 0; }
 
@@ -131,8 +144,8 @@
     width: auto;
     max-width: 100%;
   }
-  .art-img.art-tall { max-height: 52vh; }
-  .art-img.art-portrait { max-height: 64vh; }
+  .art-img.art-tall { max-height: 62vh; }
+  .art-img.art-portrait { max-height: 74vh; }
 
   /* slide del meme: todo centrado en columna, imagen completa + pie de foto */
   .slide[data-mode="meme"] { align-items: center; justify-content: center; }
@@ -210,12 +223,9 @@
         <p class="body intro">Elegí la carrera porque es lo que más se acerca a mi búsqueda artística y profesional. Me interesa el cruce entre arte/tecnología, lo analógico/digital, la combinación de sus procesos.</p>
       </div>
       <div class="col-art">
-        <div class="frame">
-          <iframe
-            src="https://assets.objkt.media/file/assets-003/QmcAdEerZiG5gye49EgvwhtsiadSq6V6ZbTrVeTaqUTEWE/artifact"
-            loading="lazy" allowfullscreen title="Kinderszenen"></iframe>
-        </div>
-        <div class="art-label">kinderszenen</div>
+        <video class="art-img art-portrait" src="obras/kinderszenen.mp4"
+               autoplay loop muted playsinline></video>
+      </div>
       </div>
     </section>
 
@@ -241,7 +251,6 @@
       </div>
       <div class="col-art">
         <img class="art-img art-portrait" src="obras/nino-dibuja.gif" alt="Niño dibujando — obra de Gaspar Tomasello" />
-        <div class="art-label">niño dibujando</div>
       </div>
     </section>
 
@@ -265,11 +274,12 @@
       <div class="col-text">
         <div class="tag">Contacto</div>
         <h1>Gracias</h1>
+        <p class="body closing">Todas estas animaciones/gifs animados son creaciones propias. ¡Gracias por mirar y comentar!</p>
         <div class="role">gaspar.tomasello@gmail.com<br>IG · @gaspartomasello</div>
+        <div class="credit">Este HTML fue vibecodeado y diseñado con Claude.</div>
       </div>
       <div class="col-art">
         <img class="art-img art-portrait" src="obras/gato.gif" alt="Gato — obra de Gaspar Tomasello" />
-        <div class="art-label">gato</div>
       </div>
     </section>
 
