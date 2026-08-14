@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>EL PASILLO — 3:47 AM</title>
+<title>LA DIMENSIÓN DESCONOCIDA — Escuela 16 D.E. 19</title>
 <style>
   :root{
     --tiza:#e8e4d9;
@@ -22,12 +22,24 @@
   #vig{position:absolute;inset:0;
     background:radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,.85) 100%)}
   #bateria{position:absolute;left:18px;bottom:18px;width:120px}
+  #aguante{position:absolute;left:18px;bottom:52px;width:120px}
+  #aguante .lbl{font-size:10px;letter-spacing:.22em;opacity:.55;margin-bottom:5px}
+  #aguante .barra{height:6px;background:rgba(255,255,255,.12);overflow:hidden}
+  #aguante .llena{height:100%;width:100%;background:#cdd6c8;transition:width .1s linear}
+  #aguante.vacio .lbl{opacity:.9;color:#c98b8b}
+  #objetivo{position:absolute;left:18px;top:16px;font-size:11px;letter-spacing:.14em;
+    opacity:.75;text-shadow:0 0 10px #000;max-width:46ch;line-height:1.8}
+  #objetivo b{color:#f0ece0;font-weight:400}
+  #accion{position:absolute;left:50%;bottom:26%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.14em;opacity:0;transition:opacity .12s;
+    border:1px solid rgba(232,228,217,.28);padding:6px 14px;background:rgba(0,0,0,.35);
+    white-space:nowrap;text-shadow:0 0 8px #000}
   #bateria .lbl{font-size:10px;letter-spacing:.22em;opacity:.55;margin-bottom:5px}
   #bateria .barra{height:6px;background:rgba(255,255,255,.12);overflow:hidden}
   #bateria .llena{height:100%;width:100%;background:var(--tiza);transition:width .2s linear}
   #reloj{position:absolute;right:18px;bottom:18px;font-size:11px;letter-spacing:.2em;opacity:.5}
   #susurro{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);
-    font-size:13px;letter-spacing:.12em;text-align:center;opacity:0;
+    font-size:13px;letter-spacing:.12em;text-align:center;opacity:0;white-space:pre-line;
     transition:opacity .8s ease;text-shadow:0 0 12px #000;max-width:80vw}
   #susurro.on{opacity:.85}
   #flash{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .45s linear}
@@ -41,9 +53,11 @@
   h1{font-size:clamp(38px,11vw,86px);font-weight:400;letter-spacing:.16em;
      line-height:.95;margin-bottom:6px}
   h1 span{display:block;font-size:.28em;letter-spacing:.55em;opacity:.45;margin-top:14px}
-  .teclas{margin:34px 0 30px;font-size:12px;line-height:2.1;opacity:.7;letter-spacing:.08em}
-  .teclas b{display:inline-block;min-width:64px;border:1px solid rgba(232,228,217,.35);
-    padding:1px 8px;margin-right:12px;font-weight:400}
+  .teclas{margin:34px 0 30px;font-size:12px;opacity:.7;letter-spacing:.08em;
+    display:inline-block;text-align:left}
+  .teclas div{display:flex;align-items:center;gap:14px;margin:7px 0}
+  .teclas b{min-width:92px;text-align:center;border:1px solid rgba(232,228,217,.35);
+    padding:2px 8px;font-weight:400}
   button{pointer-events:auto;font:inherit;font-size:12px;letter-spacing:.28em;
     background:none;color:var(--tiza);border:1px solid rgba(232,228,217,.5);
     padding:14px 34px;cursor:pointer;transition:.2s}
@@ -74,7 +88,10 @@
 <div id="hud">
   <div id="vig"></div>
   <div id="bateria"><div class="lbl">LINTERNA</div><div class="barra"><div class="llena" id="pila"></div></div></div>
-  <div id="reloj">03:47</div>
+  <div id="aguante"><div class="lbl">AGUANTE</div><div class="barra"><div class="llena" id="stam"></div></div></div>
+  <div id="objetivo"></div>
+  <div id="accion"></div>
+  <div id="reloj">03:47:00</div>
   <div id="susurro"></div>
   <div id="flash"></div>
 </div>
@@ -85,17 +102,19 @@
 </div>
 
 <div class="pantalla" id="menu">
-  <div class="kicker">ESCUELA N.º 12 — TURNO NOCHE</div>
-  <h1>EL PASILLO<span>03:47 AM</span></h1>
+  <div class="kicker">ESCUELA N.º 16 · DISTRITO ESCOLAR 19 — "WILLIAM MORRIS"</div>
+  <h1>LA DIMENSIÓN<span>DESCONOCIDA</span></h1>
   <div class="teclas">
     <div><b>W A S D</b>caminar</div>
     <div><b>MOUSE</b>mirar</div>
-    <div><b>SHIFT</b>correr</div>
+    <div><b>SHIFT</b>correr (gasta aguante)</div>
     <div><b>F</b>linterna</div>
+    <div><b>E</b>revisar / usar</div>
   </div>
   <button id="jugar">ENTRAR</button>
-  <div class="nota">Cerraron el colegio hace veinte años. Alguien sigue jugando en el pasillo.
-    Andá hasta las puertas del fondo, o metete en el ascensor. Usá auriculares.</div>
+  <div class="nota">Te quedaste adentro después de hora. El pasillo del primer piso, algo
+    que no debería existir debajo, y la planta baja con el portón cerrado con candado.
+    Usá auriculares.</div>
 </div>
 
 <div class="pantalla oculta" id="fin">
@@ -105,7 +124,7 @@
 </div>
 
 <div class="pantalla oculta" id="ganaste">
-  <div class="kicker">PUERTA DE SERVICIO</div>
+  <div class="kicker">PORTÓN DE ENTRADA — PLANTA BAJA</div>
   <h1>SALISTE<span>por ahora</span></h1>
   <button id="devuelta">VOLVER A ENTRAR</button>
 </div>
@@ -312,6 +331,81 @@ function texPlanoEvacuacion(){ // el plano del piso 1 colgado en la pared
   ruido(x,512,300,500,.06);
   return c;
 }
+function texParedPB(){   // planta baja: blanco arriba, zócalo gris
+  const [c,x]=lienzo(128,256);
+  const corte=Math.round(256*0.55);
+  x.fillStyle="#eeece4"; x.fillRect(0,0,128,corte);
+  x.fillStyle="#a9aeb0"; x.fillRect(0,corte,128,256-corte);
+  x.fillStyle="rgba(255,255,255,.45)"; x.fillRect(0,corte-4,128,4);
+  x.fillStyle="rgba(0,0,0,.10)";       x.fillRect(0,corte,128,3);
+  x.fillStyle="#d9d6cd"; x.fillRect(0,244,128,12);         // zócalo de mármol
+  for(let i=0;i<12;i++){
+    x.fillStyle=`rgba(120,120,112,${.03+Math.random()*.05})`;
+    x.fillRect(Math.random()*128, Math.random()*70, 1+Math.random()*3, 70+Math.random()*130);
+  }
+  ruido(x,128,256,900,.08);
+  return c;
+}
+function texVidrioRet(){ // vidrio armado con malla, como las ventanas del hall
+  const [c,x]=lienzo(128,128);
+  const g=x.createLinearGradient(0,0,0,128);
+  g.addColorStop(0,"#cfd6d2"); g.addColorStop(1,"#9fa9a6");
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  x.strokeStyle="rgba(90,96,92,.45)"; x.lineWidth=1;
+  for(let i=0;i<128;i+=8){
+    x.beginPath(); x.moveTo(i,0); x.lineTo(i,128); x.stroke();
+    x.beginPath(); x.moveTo(0,i); x.lineTo(128,i); x.stroke();
+  }
+  ruido(x,128,128,200,.05);
+  return c;
+}
+function texAfiche(){   // carteleras del hall
+  const [c,x]=lienzo(512,320); x.scale(2,2);
+  x.fillStyle="#dcd8cc"; x.fillRect(0,0,256,160);
+  const cols=["#e4d24a","#7fc4e8","#e8a0c0","#a8dd8a","#f0f0e6","#e8b25a"];
+  for(let i=0;i<4;i++)for(let j=0;j<2;j++){
+    const px=8+i*62, py=8+j*74;
+    x.fillStyle=cols[(i+j*3)%cols.length]; x.fillRect(px,py,56,68);
+    x.strokeStyle="rgba(0,0,0,.2)"; x.strokeRect(px+.5,py+.5,55,67);
+    x.fillStyle="rgba(40,40,40,.55)";
+    for(let k=0;k<5;k++) x.fillRect(px+6, py+10+k*10, 20+Math.random()*28, 3);
+    x.fillStyle="rgba(200,40,40,.8)"; x.fillRect(px+6,py+4,34,4);
+  }
+  ruido(x,256,160,260,.08);
+  return c;
+}
+function texBanner(){   // los telones negros con trabajos colgados
+  const [c,x]=lienzo(256,512);
+  x.fillStyle="#141414"; x.fillRect(0,0,256,512);
+  const cols=["#e8e2d0","#d8b23a","#c85a3a","#8fb4d8","#b9d86a","#e0e0e0"];
+  for(let i=0;i<26;i++){
+    x.save();
+    x.translate(30+Math.random()*196, 40+Math.random()*430);
+    x.rotate((Math.random()-.5)*1.2);
+    x.fillStyle=cols[Math.floor(Math.random()*cols.length)];
+    x.globalAlpha=.85;
+    const w=14+Math.random()*34, h=14+Math.random()*30;
+    if(Math.random()<.5) x.fillRect(-w/2,-h/2,w,h);
+    else { x.beginPath(); x.ellipse(0,0,w/2,h/2,0,0,7); x.fill(); }
+    x.restore();
+  }
+  x.globalAlpha=1;
+  ruido(x,256,512,600,.14);
+  return c;
+}
+function texMarmol(){
+  const [c,x]=lienzo(128,128);
+  x.fillStyle="#ddd8c8"; x.fillRect(0,0,128,128);
+  for(let i=0;i<14;i++){
+    x.strokeStyle=`rgba(150,142,124,${.12+Math.random()*.2})`;
+    x.lineWidth=1+Math.random()*2;
+    x.beginPath(); x.moveTo(Math.random()*128,0);
+    x.bezierCurveTo(Math.random()*128,42,Math.random()*128,86,Math.random()*128,128);
+    x.stroke();
+  }
+  ruido(x,128,128,700,.08);
+  return c;
+}
 function texPapelBackroom(){ // empapelado mostaza
   const [c,x]=lienzo(256,256);
   x.fillStyle="#c9ac4e"; x.fillRect(0,0,256,256);
@@ -464,6 +558,64 @@ const Audio3 = {
     g.gain.setValueAtTime(.7,t); g.gain.exponentialRampToValueAtTime(.001,t+1.2);
     o.connect(g); n.connect(nf).connect(g); g.connect(out);
     o.start(t); o.stop(t+1.2); n.start(t); n.stop(t+1.2);
+  },
+  jadeo(fase){          // el personaje sin aire
+    if(!this.listo) return;
+    const t=this.ac.currentTime, dur=fase?.55:.42, out=this.bus(.85,.25);
+    const src=this.ac.createBufferSource();
+    const b=this.ac.createBuffer(1, this.ac.sampleRate*dur, this.ac.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++){
+      const k=i/d.length;
+      const env=fase? Math.sin(Math.PI*k)**1.5 : Math.pow(1-k,1.4)*Math.min(1,k*14);
+      d[i]=(Math.random()*2-1)*env;
+    }
+    src.buffer=b;
+    const f=this.ac.createBiquadFilter(); f.type="bandpass"; f.Q.value=1.1;
+    f.frequency.setValueAtTime(fase?420:900,t);
+    f.frequency.linearRampToValueAtTime(fase?820:380,t+dur);
+    const g=this.ac.createGain(); g.gain.value=fase?.42:.34;
+    src.connect(f).connect(g).connect(out); src.start(t);
+  },
+  papel(){
+    if(!this.listo) return;
+    for(let i=0;i<3;i++) setTimeout(()=>this.ruidito(rnd(2600,4200),.09,.9),i*70);
+  },
+  ruidito(freq,vol,q){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.6,.35);
+    const src=this.ac.createBufferSource();
+    const b=this.ac.createBuffer(1,2600,this.ac.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    src.buffer=b;
+    const f=this.ac.createBiquadFilter(); f.type="bandpass"; f.frequency.value=freq; f.Q.value=q||1;
+    const g=this.ac.createGain(); g.gain.value=vol;
+    src.connect(f).connect(g).connect(out); src.start(t);
+  },
+  metal(){ this.ruidito(rnd(1800,2600),.18,3); setTimeout(()=>this.ruidito(rnd(1400,2000),.12,4),90); },
+  termica(){           // la llave térmica del tablero
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.8,.5);
+    const o=this.ac.createOscillator(); o.type="square"; o.frequency.setValueAtTime(180,t);
+    o.frequency.exponentialRampToValueAtTime(60,t+.12);
+    const g=this.ac.createGain(); g.gain.setValueAtTime(.2,t);
+    g.gain.exponentialRampToValueAtTime(.0005,t+.16);
+    o.connect(g).connect(out); o.start(t); o.stop(t+.2);
+    this.ruidito(1200,.16,2);
+    setTimeout(()=>this.chispazo(.2),140);
+  },
+  campana(){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.5,1.0);
+    [784,1176,1568,2350].forEach((hz,i)=>{
+      const o=this.ac.createOscillator(); o.type="sine"; o.frequency.value=hz*(1+i*.002);
+      const g=this.ac.createGain();
+      g.gain.setValueAtTime(.0001,t);
+      g.gain.exponentialRampToValueAtTime(.16/(i+1),t+.008);
+      g.gain.exponentialRampToValueAtTime(.0004,t+2.6-i*.4);
+      o.connect(g).connect(out); o.start(t); o.stop(t+2.8);
+    });
   },
   puerta(){
     if(!this.listo) return;
@@ -1013,13 +1165,395 @@ function crearNena(){
 let entidades=[], vistaNena=false;
 
 /* ==========================================================
+   5b. MUNDO C — PLANTA BAJA (nivel 3: puzzle, sin entidades)
+   ========================================================== */
+const mundoPlanta = new THREE.Group();
+mundoPlanta.visible = false;
+scene.add(mundoPlanta);
+
+const PB_ALTO = 3.6, HALL_ALTO = 4.4;
+const PB = {
+  ascensor: {x1:-2.05, x2: 2.05, z1:  0.55, z2:  4.60},   // sala del ascensor (foto 1)
+  pasillo : {x1:-1.85, x2: 1.85, z1:-30.00, z2:  0.60},   // pasillo largo   (foto 2)
+  galeria : {x1:-5.60, x2:-1.80, z1:-20.00, z2: -8.00},   // galería de columnas
+  hall    : {x1:-7.00, x2: 7.00, z1:-43.60, z2:-30.00}    // hall de entrada (fotos 3 y 4)
+};
+// zonas transitables: se pisan entre sí para que no queden costuras cerradas
+const PB_ZONAS = [
+  PB.ascensor,
+  PB.pasillo,
+  {x1:-0.55, x2:0.55, z1:-0.30, z2:1.05, m:0.12},                    // vano angosto
+  {x1:PB.galeria.x1, x2:-1.10, z1:PB.galeria.z1, z2:PB.galeria.z2},  // galería
+  {x1:PB.hall.x1, x2:PB.hall.x2, z1:PB.hall.z1, z2:-29.00}           // hall
+];
+const PB_BLOQUES = [];
+let   interactivos = [], lucesPB = [], luzPlanta = false, tieneLlave = false;
+let   zonaDeLaLlave = "", pistaLeida = false;
+
+const cajaPB  = (w,h,d,mat,x,y,z)=> caja(w,h,d,mat,x,y,z,mundoPlanta);
+const planoPB = (w,h,mat,x,y,z,rx,ry)=> plano(w,h,mat,x,y,z,rx,ry,mundoPlanta);
+function instPB(geo,mat,lista){
+  const m=new THREE.InstancedMesh(geo,mat,lista.length), d=new THREE.Object3D();
+  lista.forEach((it,i)=>{ d.position.set(it[0],it[1],it[2]);
+    d.rotation.set(it[3]||0,it[4]||0,it[5]||0); d.updateMatrix(); m.setMatrixAt(i,d.matrix); });
+  m.instanceMatrix.needsUpdate=true; mundoPlanta.add(m); return m;
+}
+function bloque(x1,z1,x2,z2){ PB_BLOQUES.push({x1:Math.min(x1,x2),x2:Math.max(x1,x2),
+                                               z1:Math.min(z1,z2),z2:Math.max(z1,z2)}); }
+function registro(o){ interactivos.push(Object.assign({tipo:"registro",r:1.7,usado:false},o)); }
+
+function construirPlantaBaja(){
+  while(mundoPlanta.children.length) mundoPlanta.remove(mundoPlanta.children[0]);
+  interactivos=[]; lucesPB=[]; PB_BLOQUES.length=0;
+  luzPlanta=false; tieneLlave=false; pistaLeida=false;
+
+  const matP   = new THREE.MeshLambertMaterial({map:texDe(texParedPB(),10,1,false)});
+  const matPh  = new THREE.MeshLambertMaterial({map:texDe(texParedPB(),16,1,false)});
+  const matPisoPB=new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(),9,60),
+                                               shininess:26, specular:0x26281f});
+  const matPisoH =new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(),22,20),
+                                               shininess:26, specular:0x26281f});
+  const matTechoPB=new THREE.MeshLambertMaterial({color:0xe8e6de});
+  const matGris  = new THREE.MeshLambertMaterial({color:0x8f979b});
+  const matGrisC = new THREE.MeshLambertMaterial({color:0xb9c0c2});
+  const matBlancoPB=new THREE.MeshLambertMaterial({color:0xeeece4});
+  const matNegro = new THREE.MeshLambertMaterial({color:0x1d2024});
+  const matRojoPB= new THREE.MeshLambertMaterial({color:0xa8281c});
+  const matMarmol= new THREE.MeshLambertMaterial({map:texDe(texMarmol(),2,2)});
+  const matVidrioPB=new THREE.MeshLambertMaterial({map:texDe(texVidrioRet(),3,3)});
+  const matPanelPB=new THREE.MeshBasicMaterial({color:0x3a3a36});   // arranca apagado
+  const panelesPB=[];
+
+  /* ---------------- PASILLO LARGO (foto 2) ---------------- */
+  const cz=(PB.pasillo.z1+PB.pasillo.z2)/2, lg=PB.pasillo.z2-PB.pasillo.z1;
+  planoPB(3.7,lg,matPisoPB,0,0,cz,-Math.PI/2,0);
+  planoPB(3.7,lg,matTechoPB,0,PB_ALTO,cz,Math.PI/2,0);
+  planoPB(lg,PB_ALTO,matP, 1.85,PB_ALTO/2,cz,0,-Math.PI/2);
+  // pared izquierda partida por la galería
+  planoPB(10.0,PB_ALTO,matP,-1.85,PB_ALTO/2,-3.0,0,Math.PI/2);
+  planoPB(10.0,PB_ALTO,matP,-1.85,PB_ALTO/2,-25.0,0,Math.PI/2);
+
+  // bandeja portacables perforada + caño rojo (pared derecha)
+  const y=PB_ALTO-.55, mens=[], perf=[];
+  for(let z=PB.pasillo.z2-1; z>PB.pasillo.z1; z-=6)
+    cajaPB(.5,.06,6, matGalva, 1.85-.32, y, z-3);
+  for(let z=PB.pasillo.z2-1; z>PB.pasillo.z1; z-=1.5){
+    mens.push([1.85-.30, y-.06, z]); perf.push([1.85-.04, y+.14, z]);
+  }
+  instPB(new THREE.BoxGeometry(.60,.05,.05), matMetal, mens);
+  instPB(new THREE.BoxGeometry(.05,.32,.05), matMetal, perf);
+  cajaPB(.5,.06,3.6, matGalva, 0, PB_ALTO-.22, -1.2);        // la que cruza
+  cajaPB(.13,.13,lg-2, matRojoPB, 1.85-.55, PB_ALTO-.30, cz);
+  cajaPB(.12,2.3,.12, matRojoPB, 1.85-.55, 1.5, -6.2);
+  cajaPB(.2,.2,.2, matRojoPB, 1.85-.55, 2.72, -6.2);
+  // gabinete rojo de manguera
+  cajaPB(.28,1.05,.68, matRojoPB, 1.85-.14, 1.55, -7.4);
+  cajaPB(.05,.86,.52, new THREE.MeshBasicMaterial({color:0x2b3138}), 1.85-.29, 1.55, -7.4);
+  registro({x:1.4,z:-7.4,zona:"el pasillo largo",etiqueta:"revisar el gabinete de manguera"});
+
+  // TABLERO GENERAL (la caja verde de la foto): acá se devuelve la luz
+  cajaPB(.20,1.05,.80, new THREE.MeshLambertMaterial({color:0x7f8f7a}), -1.85+.10, 1.75, -9.6);
+  cajaPB(.06,.9,.66, new THREE.MeshLambertMaterial({color:0x6b7a67}), -1.85+.21, 1.75, -9.6);
+  cajaPB(.07,.12,.07, matMetal, -1.85+.24, 1.75, -9.30);
+  interactivos.push({tipo:"tablero", x:-1.55, z:-9.6, r:1.9,
+                     etiqueta:"subir la llave térmica"});
+
+  // artefactos cuadrados colgados de cables
+  for(let z=PB.pasillo.z2-2.5; z>PB.pasillo.z1+1; z-=5.4){
+    const pl=planoPB(.9,.9, matPanelPB, 0, PB_ALTO-.55, z, Math.PI/2, 0);
+    cajaPB(.96,.1,.96, matBlancoPB, 0, PB_ALTO-.50, z);
+    [-.4,.4].forEach(dx=> cajaPB(.012,.5,.012, matNegro, dx, PB_ALTO-.25, z));
+    const luz=new THREE.PointLight(0xf2f0e2, 0, 11, 1.6);
+    luz.position.set(0,PB_ALTO-.75,z); mundoPlanta.add(luz);
+    lucesPB.push({luz,panel:pl}); panelesPB.push(pl);
+  }
+
+  // telones negros con trabajos (fotos 2 y 4)
+  const matBan=new THREE.MeshLambertMaterial({map:texPlana(texBanner()), side:THREE.DoubleSide});
+  [[-1.78,-11.5],[-1.78,-15.2],[-1.78,-18.6]].forEach(([x,z])=>{
+    planoPB(1.15,2.3, matBan, x+.06, 1.85, z, 0, Math.PI/2);
+    cajaPB(.06,.05,1.25, matMetal, x+.06, 3.02, z);
+  });
+
+  // puerta vidriada + maceta + carteles (pared derecha)
+  cajaPB(.08,2.15,1.0, matGrisC, 1.85-.03, 1.07, -12.6);
+  planoPB(.55,.95, matVidrioPB, 1.85-.08, 1.62, -12.6, 0, -Math.PI/2);
+  cajaPB(.12,2.3,.1, matBlancoPB, 1.85-.05, 1.15, -13.16);
+  cajaPB(.12,2.3,.1, matBlancoPB, 1.85-.05, 1.15, -12.04);
+  cajaPB(.12,.1,1.22, matBlancoPB, 1.85-.05, 2.25, -12.6);
+  (function maceta(){
+    const g=new THREE.Group(); g.position.set(1.52,0,-11.2);
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(.17,.13,.32,10),
+      new THREE.MeshLambertMaterial({color:0xb2603a})); m.position.y=.16; g.add(m);
+    for(let i=0;i<7;i++){
+      const h=new THREE.Mesh(new THREE.BoxGeometry(.05,.55,.02),
+        new THREE.MeshLambertMaterial({color:0x2f6b34}));
+      h.position.set(Math.cos(i)*.06,.55,Math.sin(i)*.06);
+      h.rotation.z=(Math.random()-.5)*.8; h.rotation.x=(Math.random()-.5)*.5; g.add(h);
+    }
+    mundoPlanta.add(g);
+  })();
+  registro({x:1.52,z:-11.2,zona:"el pasillo largo",etiqueta:"revisar la maceta"});
+
+  // tachos de basura
+  function tacho(x,z,zona){
+    const g=new THREE.Group(); g.position.set(x,0,z);
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(.20,.17,.66,12),
+      new THREE.MeshLambertMaterial({color:0x35424a})); c.position.y=.33; g.add(c);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.05,12), matNegro);
+    t.position.y=.68; g.add(t);
+    mundoPlanta.add(g);
+    registro({x,z,zona,etiqueta:"revisar el tacho"});
+  }
+  tacho(-1.55,-5.4,"el pasillo largo");
+  tacho( 1.58,-21.8,"el pasillo largo");
+  tacho(-4.9,-13.0,"la galería de columnas");
+
+  /* ---------------- GALERÍA DE COLUMNAS (izquierda del pasillo) ---------------- */
+  const gz=(PB.galeria.z1+PB.galeria.z2)/2, gl=PB.galeria.z2-PB.galeria.z1;
+  planoPB(3.8,gl,matPisoPB,-3.72,0,gz,-Math.PI/2,0);
+  planoPB(3.8,gl,matTechoPB,-3.72,PB_ALTO,gz,Math.PI/2,0);
+  planoPB(gl,PB_ALTO,matP,-5.60,PB_ALTO/2,gz,0,Math.PI/2);
+  planoPB(3.8,PB_ALTO,matP,-3.72,PB_ALTO/2,PB.galeria.z1,0,0);
+  planoPB(3.8,PB_ALTO,matP,-3.72,PB_ALTO/2,PB.galeria.z2,0,Math.PI);
+  [-9.5,-14.0,-18.5].forEach(z=>{                       // columnas de la galería
+    cajaPB(.55,PB_ALTO,.55, matBlancoPB, -1.85, PB_ALTO/2, z);
+    cajaPB(.66,.14,.66, matGris, -1.85, .07, z);
+    bloque(-2.16,z-.30,-1.54,z+.30);
+  });
+  // escalones de mármol
+  for(let i=0;i<2;i++){
+    cajaPB(1.4,.16,3.0, matMarmol, -5.0+i*.5, .08+i*.16, -16.5);
+    bloque(-5.7,-18.0,-4.2,-15.0);
+  }
+  registro({x:-4.6,z:-16.5,zona:"la galería de columnas",etiqueta:"mirar debajo del escalón"});
+  // armario metálico
+  cajaPB(.5,1.9,1.0, new THREE.MeshLambertMaterial({color:0x9aa39a}), -5.30, .95, -10.4);
+  cajaPB(.52,.06,1.02, matNegro, -5.30, 1.92, -10.4);
+  bloque(-5.6,-10.95,-5.0,-9.85);
+  registro({x:-4.9,z:-10.4,zona:"la galería de columnas",etiqueta:"abrir el armario"});
+  // luz de la galería
+  [-10.5,-17.5].forEach(z=>{
+    const pl=planoPB(.9,.9, matPanelPB, -3.7, PB_ALTO-.5, z, Math.PI/2, 0);
+    cajaPB(.96,.1,.96, matBlancoPB, -3.7, PB_ALTO-.45, z);
+    const luz=new THREE.PointLight(0xf2f0e2, 0, 10, 1.6);
+    luz.position.set(-3.7,PB_ALTO-.7,z); mundoPlanta.add(luz);
+    lucesPB.push({luz,panel:pl}); panelesPB.push(pl);
+  });
+
+  /* ---------------- HALL DE ENTRADA (fotos 3 y 4) ---------------- */
+  const hz=(PB.hall.z1+PB.hall.z2)/2, hw=PB.hall.x2-PB.hall.x1, hl=PB.hall.z2-PB.hall.z1;
+  planoPB(hw,hl,matPisoH,0,0,hz,-Math.PI/2,0);
+  planoPB(hw,hl,matTechoPB,0,HALL_ALTO,hz,Math.PI/2,0);
+  planoPB(hl,HALL_ALTO,matPh,PB.hall.x1,HALL_ALTO/2,hz,0, Math.PI/2);
+  planoPB(hl,HALL_ALTO,matPh,PB.hall.x2,HALL_ALTO/2,hz,0,-Math.PI/2);
+  // pared del pasillo hacia el hall (con el vano del pasillo)
+  [[-1.85,-5.575],[1.85,5.575]].forEach(([b,cx])=>{
+    planoPB(Math.abs(PB.hall.x2-Math.abs(b)),HALL_ALTO,matPh,cx,HALL_ALTO/2,PB.hall.z2,0,Math.PI);
+  });
+  cajaPB(3.9,HALL_ALTO-PB_ALTO,.3, matBlancoPB, 0, PB_ALTO+(HALL_ALTO-PB_ALTO)/2, PB.hall.z2);
+  bloque(PB.hall.x1,-30.30,-1.95,-29.15);      // la boca del pasillo es el único paso
+  bloque(1.95,-30.30,PB.hall.x2,-29.15);
+
+  // columnas del hall
+  [[-3.6,-33.0],[3.6,-33.0],[-3.6,-37.0],[3.6,-37.0],[-3.6,-41.0],[3.6,-41.0]].forEach(([x,z])=>{
+    cajaPB(.62,HALL_ALTO,.62, matBlancoPB, x, HALL_ALTO/2, z);
+    cajaPB(.74,.16,.74, matGris, x, .08, z);
+    bloque(x-.35,z-.35,x+.35,z+.35);
+  });
+
+  // frente: ventanales con vidrio armado + portón de salida
+  const zf=PB.hall.z1;
+  planoPB(hw,HALL_ALTO,matPh,0,HALL_ALTO/2,zf,0,0);
+  function ventanal(cx){
+    planoPB(3.0,2.5, matVidrioPB, cx, 2.05, zf+.06);
+    for(let i=0;i<4;i++) cajaPB(.09,2.6,.1, matGrisC, cx-1.5+i*1.0, 2.05, zf+.08);
+    cajaPB(3.2,.12,.12, matGrisC, cx, 3.32, zf+.08);
+    cajaPB(3.2,.12,.12, matGrisC, cx, 1.30, zf+.08);
+    cajaPB(3.2,.12,.12, matGrisC, cx, .80, zf+.08);
+    planoPB(3.0,.5, matVidrioPB, cx, 3.62, zf+.06);
+  }
+  ventanal(-4.1); ventanal(4.1);
+  // PORTÓN (la salida): dos hojas grises, vidrio reticulado, cadena y candado
+  cajaPB(.9,2.35,.1, matGris, -.47, 1.18, zf+.10);
+  cajaPB(.9,2.35,.1, matGris,  .47, 1.18, zf+.10);
+  planoPB(.66,1.15, matVidrioPB, -.47, 1.72, zf+.16);
+  planoPB(.66,1.15, matVidrioPB,  .47, 1.72, zf+.16);
+  cajaPB(.06,2.5,.14, matBlancoPB, -.95, 1.25, zf+.12);
+  cajaPB(.06,2.5,.14, matBlancoPB,  .95, 1.25, zf+.12);
+  cajaPB(2.0,.14,.14, matBlancoPB, 0, 2.45, zf+.12);
+  planoPB(2.0,.9, matVidrioPB, 0, 3.05, zf+.06);
+  const cadena=cajaPB(.9,.07,.07, matMetal, 0, 1.02, zf+.18);
+  const candado=cajaPB(.13,.17,.06, new THREE.MeshLambertMaterial({color:0xb8a03a}), 0, .93, zf+.22);
+  interactivos.push({tipo:"porton", x:0, z:zf+.9, r:2.2, cadena, candado,
+                     etiqueta:"abrir el portón"});
+
+  // BUSTO de William Morris sobre pedestal de mármol (foto 3)
+  (function busto(){
+    const x=2.15, z=-40.2;
+    cajaPB(.86,.18,.86, matMarmol, x, .09, z);
+    cajaPB(.66,1.05,.66, matMarmol, x, .70, z);
+    cajaPB(.80,.12,.80, matMarmol, x, 1.28, z);
+    const b=new THREE.Mesh(new THREE.SphereGeometry(.20,12,10),
+      new THREE.MeshLambertMaterial({color:0x4a4034}));
+    b.position.set(x,1.74,z); b.scale.set(1,1.15,.95); mundoPlanta.add(b);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(.20,.34,.46,10),
+      new THREE.MeshLambertMaterial({color:0x4a4034}));
+    t.position.set(x,1.42,z); mundoPlanta.add(t);
+    const ho=new THREE.Mesh(new THREE.BoxGeometry(.56,.12,.30),
+      new THREE.MeshLambertMaterial({color:0x443a2e}));
+    ho.position.set(x,1.28,z); mundoPlanta.add(ho);
+    cajaPB(.3,.2,.02, new THREE.MeshLambertMaterial({color:0xa89a6a}), x, .95, z+.34);
+    bloque(x-.45,z-.45,x+.45,z+.45);
+    interactivos.push({tipo:"info", x, z:z+.9, r:1.9, etiqueta:"leer la placa",
+      texto:"WILLIAM MORRIS · 1864-1932.\nEl bronce está frío. Alguien le dejó una flor de papel."});
+    registro({x:x-.9,z,zona:"el hall de entrada",etiqueta:"mirar detrás del pedestal"});
+  })();
+
+  // campana de bronce en la pared
+  (function campana(){
+    const x=-1.6, z=zf+.2;
+    cajaPB(.1,.24,.1, matBlancoPB, x, 2.55, z+.05);
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(.09,.14,.22,10),
+      new THREE.MeshLambertMaterial({color:0x8a6f2a}));
+    c.position.set(x,2.32,z+.16); mundoPlanta.add(c);
+    interactivos.push({tipo:"campana", x, z:z+1.0, r:1.8, etiqueta:"tocar la campana"});
+  })();
+
+  // carteleras del hall
+  const matAf=new THREE.MeshLambertMaterial({map:texPlana(texAfiche())});
+  planoPB(2.4,1.5, matAf, PB.hall.x2-.06, 1.95, -38.0, 0, -Math.PI/2);
+  planoPB(2.4,1.5, matAf, PB.hall.x1+.06, 1.95, -35.0, 0,  Math.PI/2);
+  interactivos.push({tipo:"info", x:PB.hall.x2-1.0, z:-38.0, r:1.9, etiqueta:"leer la cartelera",
+    texto:"«NO AL BULLYING», 6.º B. Las letras están recortadas de revistas.\nUna de las hojas tiene, atrás, la huella de una mano."});
+
+  // mesas y sillas del hall (fotos 3 y 4)
+  function mesaPB(x,z,rot){
+    const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot||0;
+    const t=new THREE.Mesh(new THREE.BoxGeometry(1.3,.05,.68), matBlancoPB);
+    t.position.y=.75; g.add(t);
+    [[-.6,-.28],[.6,-.28],[-.6,.28],[.6,.28]].forEach(([px,pz])=>{
+      const p=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.74,6), matMetal);
+      p.position.set(px,.37,pz); g.add(p);
+    });
+    mundoPlanta.add(g); bloque(x-.7,z-.4,x+.7,z+.4);
+  }
+  function sillaPB(x,z,col,rot){
+    const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot||0;
+    const m=new THREE.MeshLambertMaterial({color:col});
+    const as=new THREE.Mesh(new THREE.BoxGeometry(.4,.05,.4), m); as.position.y=.45; g.add(as);
+    const re=new THREE.Mesh(new THREE.BoxGeometry(.4,.42,.05), m); re.position.set(0,.68,-.18); g.add(re);
+    [[-.16,-.16],[.16,-.16],[-.16,.16],[.16,.16]].forEach(([px,pz])=>{
+      const p=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.45,6), matMetal);
+      p.position.set(px,.22,pz); g.add(p);
+    });
+    mundoPlanta.add(g);
+  }
+  mesaPB(-2.6,-36.4,0); sillaPB(-2.6,-35.6,0x2f4fa8,Math.PI);
+  mesaPB(5.0,-34.2,Math.PI/2); sillaPB(4.2,-34.2,0xd8c23a,Math.PI/2);
+  sillaPB(5.9,-34.9,0x7a3fa8,-Math.PI/2);
+  registro({x:-2.6,z:-36.4,zona:"el hall de entrada",etiqueta:"revisar debajo de la mesa"});
+  registro({x:5.0,z:-34.2,zona:"el hall de entrada",etiqueta:"revisar la mochila"});
+
+  // cajas de cartón apiladas
+  cajaPB(.6,.4,.5, new THREE.MeshLambertMaterial({color:0xa88a5a}), -5.6,.20,-41.0);
+  cajaPB(.5,.35,.45,new THREE.MeshLambertMaterial({color:0x9c7f52}), -5.6,.57,-41.0);
+  bloque(-5.95,-41.3,-5.25,-40.7);
+  registro({x:-5.6,z:-40.2,zona:"el hall de entrada",etiqueta:"abrir las cajas"});
+
+  // luces del hall
+  [[-3.0,-33.5],[3.0,-33.5],[-3.0,-38.5],[3.0,-38.5],[0,-42.0]].forEach(([x,z])=>{
+    const pl=planoPB(.95,.95, matPanelPB, x, HALL_ALTO-.5, z, Math.PI/2, 0);
+    cajaPB(1.0,.1,1.0, matBlancoPB, x, HALL_ALTO-.45, z);
+    const luz=new THREE.PointLight(0xf2f0e2, 0, 13, 1.6);
+    luz.position.set(x,HALL_ALTO-.7,z); mundoPlanta.add(luz);
+    lucesPB.push({luz,panel:pl}); panelesPB.push(pl);
+  });
+
+  /* ---------------- SALA DEL ASCENSOR (foto 1) ---------------- */
+  (function salaAscensor(){
+    const az=(PB.ascensor.z1+PB.ascensor.z2)/2, aw=4.1, al=PB.ascensor.z2-PB.ascensor.z1, h=3.3;
+    planoPB(aw,al,matPisoPB,0,.002,az,-Math.PI/2,0);
+    planoPB(aw,al,matTechoPB,0,h,az,Math.PI/2,0);
+    planoPB(al,h,matP,-2.05,h/2,az,0, Math.PI/2);
+    planoPB(al,h,matP, 2.05,h/2,az,0,-Math.PI/2);
+    planoPB(aw,h,matP,0,h/2,PB.ascensor.z2,0,Math.PI);
+    // marco angosto pintado de gris hacia el pasillo
+    cajaPB((aw-1.05)/2,h,.3, matGris, -(aw+1.05)/4, h/2, PB.ascensor.z1);
+    cajaPB((aw-1.05)/2,h,.3, matGris,  (aw+1.05)/4, h/2, PB.ascensor.z1);
+    cajaPB(1.15,h-2.35,.3, matGris, 0, h-(h-2.35)/2, PB.ascensor.z1);
+    cajaPB(.16,2.4,.4, matGris, -.58, 1.2, PB.ascensor.z1);
+    cajaPB(.16,2.4,.4, matGris,  .58, 1.2, PB.ascensor.z1);
+    cajaPB(1.34,.16,.4, matGris, 0, 2.36, PB.ascensor.z1);
+    // ascensor
+    const zA=PB.ascensor.z2-.06;
+    cajaPB(.62,2.25,.09, matGris, -.92, 1.13, zA);
+    cajaPB(.62,2.25,.09, matGris, -.30, 1.13, zA);
+    cajaPB(.04,2.25,.11, new THREE.MeshLambertMaterial({color:0x5b646b}), -.61,1.13,zA-.01);
+    cajaPB(1.5,.14,.16, matGris, -.61, 2.32, zA-.02);
+    cajaPB(.12,.2,.05, new THREE.MeshLambertMaterial({color:0xb9bcbd}), .05,1.25,zA-.04);
+    cajaPB(.04,.04,.03, new THREE.MeshBasicMaterial({color:0xd94a35}), .05,1.25,zA-.07);
+    cajaPB(1.5,.05,.5, matNegro, -.61, .02, zA-.32);              // felpudo metálico
+    interactivos.push({tipo:"info", x:-.61, z:zA-1.0, r:1.9, etiqueta:"llamar al ascensor",
+      texto:"Apretás el botón. No se enciende.\nDel otro lado de la chapa no se escucha absolutamente nada."});
+    // puerta blanca con ventanita + mesa y silla amarilla
+    cajaPB(.08,2.1,.95, matBlancoPB, 2.0, 1.05, PB.ascensor.z2-1.3);
+    planoPB(.5,.62, matVidrioPB, 1.94, 1.62, PB.ascensor.z2-1.3, 0, -Math.PI/2);
+    mesaPB(1.25, 2.4, 0); sillaPB(.72, 2.4, 0xd8c23a, Math.PI/2);
+    registro({x:1.25,z:2.4,zona:"la sala del ascensor",etiqueta:"revisar la mesa"});
+    const luz=new THREE.PointLight(0xf2f0e2, 0, 9, 1.6);
+    luz.position.set(0,h-.5,az); mundoPlanta.add(luz);
+    const pl=planoPB(1.1,.3, matPanelPB, 0, h-.04, az, Math.PI/2, 0);
+    lucesPB.push({luz,panel:pl}); panelesPB.push(pl);
+  })();
+
+  repartirSecretos();
+}
+
+/* ---- dónde queda escondida la llave: distinto en cada partida ---- */
+const VACIOS=[
+  "Papeles mojados y una cáscara de mandarina. Nada más.",
+  "Polvo, un broche roto y media tiza.",
+  "Una hoja de cuaderno con un dibujo de un perro. Nada.",
+  "Un guante de lana sin par. Nada útil.",
+  "Vacío. Huele a lavandina vieja.",
+  "Sólo telarañas y un tornillo suelto.",
+  "Un envoltorio de alfajor de 2003. Nada.",
+  "Un carnet vencido de la biblioteca. No sirve."
+];
+function repartirSecretos(){
+  const regs=interactivos.filter(i=>i.tipo==="registro");
+  for(let i=regs.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1)); [regs[i],regs[j]]=[regs[j],regs[i]];
+  }
+  regs.forEach((r,i)=>{ r.contiene=null; r.usado=false; r.vacio=VACIOS[i%VACIOS.length]; });
+  regs[0].contiene="llave";
+  zonaDeLaLlave=regs[0].zona;
+  if(regs[1]) regs[1].contiene="cuaderno";
+  if(regs[2]) regs[2].contiene="pila";
+  if(regs[3]) regs[3].contiene="pila";
+}
+function prenderLuzPlanta(){
+  luzPlanta=true;
+  lucesPB.forEach((L,i)=>{
+    setTimeout(()=>{
+      L.luz.intensity=1.15;
+      if(L.panel) L.panel.material.color.setHex(0xf6f2e2);
+      Audio3.chispazo(.12);
+    }, i*90 + Math.random()*160);
+  });
+  ambiente.intensity=.30; ambiente.color.setHex(0x3c4650);
+}
+
+/* ==========================================================
    6. JUGADOR, COLISIONES Y ESTADO
    ========================================================== */
 const jugador = {
   pos:new THREE.Vector3(0,1.60,-.9),
   yaw:0, pitch:0,
   vel:new THREE.Vector3(),
-  bateria:100, luzOn:true, pasoT:0, bob:0
+  bateria:100, luzOn:true, pasoT:0, bob:0,
+  stam:100, sinAire:false, jadeoT:0, faseJadeo:0
 };
 let modo="pasillo", jugando=false, cazado=false, tiempo=0, latidoT=0, risaT=rnd(6,12);
 
@@ -1050,9 +1584,73 @@ function libreEnBack(x,z,r=.34){
   }
   return true;
 }
+function librePlanta(x,z){
+  for(const b of PB_BLOQUES) if(x>b.x1&&x<b.x2&&z>b.z1&&z<b.z2) return false;
+  for(const r of PB_ZONAS){
+    const m = r.m===undefined ? .3 : r.m;
+    if(x>r.x1+m && x<r.x2-m && z>r.z1+m && z<r.z2-m) return true;
+  }
+  return false;
+}
 // durante el fundido de transición el laberinto todavía no existe: no se camina
 const libre = (x,z)=> modo==="pasillo" ? libreEnPasillo(x,z)
-                    : modo==="backrooms" ? libreEnBack(x,z) : false;
+                    : modo==="backrooms" ? libreEnBack(x,z)
+                    : modo==="planta" ? librePlanta(x,z) : false;
+
+/* ---------- interacción con E (nivel 3) ---------- */
+function interactivoCerca(){
+  if(modo!=="planta") return null;
+  let best=null, bd=1e9;
+  const fx=-Math.sin(jugador.yaw), fz=-Math.cos(jugador.yaw);
+  for(const it of interactivos){
+    const dx=it.x-jugador.pos.x, dz=it.z-jugador.pos.z, d=Math.hypot(dx,dz);
+    if(d>(it.r||1.8)) continue;
+    if(d>0.25 && (dx*fx+dz*fz)/d < 0.30) continue;   // hay que estar mirándolo
+    if(d<bd){ bd=d; best=it; }
+  }
+  return best;
+}
+function objetivo(html){ $("objetivo").innerHTML=html; }
+function usarCercano(){
+  const it=interactivoCerca(); if(!it) return;
+
+  if(it.tipo==="tablero"){
+    if(luzPlanta){ susurrar("Ya está toda la luz que hay.",2200); return; }
+    Audio3.termica(); prenderLuzPlanta();
+    susurrar("Subís la llave térmica.\nLos tubos van prendiendo de a uno.",4200);
+    objetivo("<b>Objetivo:</b> encontrá la llave del portón.<br>Revisá todo lo que se pueda abrir · <b>[E]</b>");
+    return;
+  }
+  if(it.tipo==="registro"){
+    if(!luzPlanta){ susurrar("Está demasiado oscuro para revisar esto.\nHabría que devolver la luz.",3800); return; }
+    if(it.usado){ susurrar("Ya lo revisaste.",1600); return; }
+    it.usado=true;
+    if(it.contiene==="llave"){
+      tieneLlave=true; Audio3.metal();
+      susurrar("Una llave de bronce con un llavero de cartón:\nPORTÓN.",4800);
+      objetivo("<b>Objetivo:</b> abrí el portón del hall de entrada · <b>[E]</b>");
+    } else if(it.contiene==="cuaderno"){
+      pistaLeida=true; Audio3.papel();
+      susurrar("Cuaderno del casero:\n«la llave del portón quedó en "+zonaDeLaLlave+"».",5400);
+      if(!tieneLlave) objetivo("<b>Objetivo:</b> la llave está en "+zonaDeLaLlave+" · <b>[E]</b>");
+    } else if(it.contiene==="pila"){
+      jugador.bateria=clamp(jugador.bateria+45,0,100); Audio3.ruidito(920,.13,2);
+      susurrar("Un par de pilas. La linterna respira.",3000);
+    } else { Audio3.papel(); susurrar(it.vacio||"Nada.",3000); }
+    return;
+  }
+  if(it.tipo==="campana"){
+    Audio3.campana();
+    susurrar("La campana suena mucho más fuerte de lo que esperabas.",3400);
+    setTimeout(()=>{ if(modo==="planta") Audio3.risa(.35, rnd(-1,1)); }, 2600);
+    return;
+  }
+  if(it.tipo==="info"){ Audio3.ruidito(700,.05,1); susurrar(it.texto,5200); return; }
+  if(it.tipo==="porton"){
+    if(tieneLlave){ salirDeLaEscuela(); }
+    else { Audio3.metal(); susurrar("El portón está encadenado.\nEl candado es viejo, pero aguanta.",3600); }
+  }
+}
 
 /* ¿hay pared entre dos puntos del laberinto? */
 function lineaLibre(ax,az,bx,bz){
@@ -1083,6 +1681,7 @@ const teclas={};
 addEventListener("keydown",e=>{
   teclas[e.code]=true;
   if(e.code==="KeyF") alternarLinterna();
+  if(e.code==="KeyE" && jugando) usarCercano();
   if(["KeyW","KeyA","KeyS","KeyD","Space"].includes(e.code)) e.preventDefault();
 });
 addEventListener("keyup",e=>teclas[e.code]=false);
@@ -1168,6 +1767,7 @@ function entrarBackrooms(){
     Audio3.nivelDrone(.24);
     fundido(0);
     susurrar("no se supone que estés acá", 5200);
+    objetivo("<b>Objetivo:</b> encontrá la puerta verde.<br>Hay dos cosas buscándote");
   },700);
 }
 function morir(){
@@ -1178,16 +1778,39 @@ function morir(){
   fundido(1);
   setTimeout(()=>{ $("fin").classList.remove("oculta"); },600);
 }
-function escapar(){
-  jugando=false;
-  document.exitPointerLock && document.exitPointerLock();
+function entrarPlantaBaja(){
+  if(modo!=="backrooms") return;
+  modo="transicion";
   Audio3.puerta();
   fundido(1);
-  setTimeout(()=>{ $("ganaste").classList.remove("oculta"); },600);
+  setTimeout(()=>{
+    construirPlantaBaja();
+    mundoBack.visible=false; mundoPasillo.visible=false; mundoPlanta.visible=true;
+    scene.fog=new THREE.FogExp2(0x080b0f,.045);
+    scene.background=new THREE.Color(0x080b0f);
+    ambiente.color.setHex(0x2a3440); ambiente.intensity=.13;
+    jugador.pos.set(0,1.60,3.1); jugador.yaw=0; jugador.pitch=0;
+    modo="planta";
+    Audio3.nivelDrone(.12);
+    fundido(0);
+    susurrar("Planta baja. Saliste por la puerta del ascensor.\nLa escuela está cerrada con candado.",5600);
+    objetivo("<b>Objetivo:</b> devolvé la luz.<br>El tablero general está en el pasillo largo · <b>[E]</b>");
+  },700);
+}
+function salirDeLaEscuela(){
+  jugando=false;
+  document.exitPointerLock && document.exitPointerLock();
+  Audio3.metal(); Audio3.puerta();
+  fundido(1);
+  setTimeout(()=>{ $("ganaste").classList.remove("oculta"); },700);
 }
 function reiniciar(){
   cazado=false; modo="pasillo";
-  mundoPasillo.visible=true; mundoBack.visible=false;
+  mundoPasillo.visible=true; mundoBack.visible=false; mundoPlanta.visible=false;
+  interactivos=[]; luzPlanta=false; tieneLlave=false;
+  jugador.stam=100; jugador.sinAire=false;
+  objetivo("<b>Objetivo:</b> salí del pasillo.<br>Las puertas del fondo, o el ascensor");
+  $("aguante").classList.remove("vacio");
   scene.fog=new THREE.FogExp2(0x090c11,.052);
   scene.background=new THREE.Color(0x090c11);
   ambiente.color.setHex(0x22303f); ambiente.intensity=.14;
@@ -1207,6 +1830,7 @@ scene.background=new THREE.Color(0x090c11);
 $("jugar").onclick=()=>{
   Audio3.init();
   $("menu").classList.add("oculta");
+  objetivo("<b>Objetivo:</b> salí del pasillo.<br>Las puertas del fondo, o el ascensor");
   jugando=true;
   if(!esTactil) renderer.domElement.requestPointerLock();
   susurrar("las puertas del fondo… o el ascensor", 5000);
@@ -1222,6 +1846,7 @@ const tmpV=new THREE.Vector3();
 
 function gestionarLuces(dt){
   frame++;
+  if(modo==="planta") return;
   for(const L of luces){
     if(L.mundo!== (modo==="backrooms"?"backrooms":"pasillo")) { L.luz.visible=false; continue; }
     L.t-=dt;
@@ -1307,7 +1932,26 @@ function loop(){
     const mag=Math.hypot(ade,lat);
     if(mag>1){ ade/=mag; lat/=mag; }
 
-    const corriendo=(teclas.ShiftLeft||teclas.ShiftRight);
+    /* --- aguante: correr lo gasta; sin aire, el personaje jadea y no puede
+           volver a correr hasta recuperar un cuarto de la barra --- */
+    const quiereCorrer=(teclas.ShiftLeft||teclas.ShiftRight);
+    const seMueve=mag>0.01;
+    const corriendo = quiereCorrer && seMueve && !jugador.sinAire && jugador.stam>0;
+    if(corriendo){
+      jugador.stam=clamp(jugador.stam-dt*23,0,100);
+      if(jugador.stam<=0) jugador.sinAire=true;
+    } else {
+      jugador.stam=clamp(jugador.stam+dt*(jugador.sinAire?10:17),0,100);
+      if(jugador.sinAire && jugador.stam>=25) jugador.sinAire=false;   // 1/4 de la barra
+    }
+    if(jugador.sinAire || (corriendo && jugador.stam<32)){
+      jugador.jadeoT-=dt;
+      if(jugador.jadeoT<=0){
+        jugador.faseJadeo=1-jugador.faseJadeo;
+        Audio3.jadeo(jugador.faseJadeo);
+        jugador.jadeoT = jugador.sinAire ? .60 : .82;
+      }
+    }
     const vel=(corriendo?5.0:2.9);
     const sin=Math.sin(jugador.yaw), cos=Math.cos(jugador.yaw);
     const mx=(lat*cos - ade*sin)*vel*dt;
@@ -1344,6 +1988,10 @@ function loop(){
     halo.intensity     = jugador.luzOn ? .45*parp : 0;
     $("pila").style.width = jugador.bateria.toFixed(0)+"%";
     $("pila").style.background = bajo ? "#8b1a1a" : "#e8e4d9";
+    $("stam").style.width = jugador.stam.toFixed(0)+"%";
+    $("stam").style.background = jugador.sinAire ? "#8b1a1a"
+                               : jugador.stam<32 ? "#c9a24a" : "#cdd6c8";
+    $("aguante").classList.toggle("vacio", jugador.sinAire);
 
     /* --- luces del ambiente --- */
     gestionarLuces(dt);
@@ -1365,12 +2013,21 @@ function loop(){
     if(modo==="backrooms"){
       moverEntidades(dt);
       const sx=c2w(salidaCelda.x), sz=c2w(salidaCelda.y);
-      if(Math.hypot(jugador.pos.x-sx, jugador.pos.z-sz) < 1.2) escapar();
+      if(Math.hypot(jugador.pos.x-sx, jugador.pos.z-sz) < 1.2) entrarPlantaBaja();
     }
 
-    /* --- reloj --- */
-    const min=47+Math.floor(tiempo/6);
-    $("reloj").textContent = "03:"+String(min%60).padStart(2,"0");
+    /* --- reloj: hora completa, corre 10 veces más rápido --- */
+    const t0=3*3600+47*60, seg=Math.floor(t0+tiempo*10);
+    const hh=Math.floor(seg/3600)%24, mm=Math.floor(seg/60)%60, ss=seg%60;
+    $("reloj").textContent = String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")
+                            +":"+String(ss).padStart(2,"0");
+
+    /* --- cartel de acción del nivel 3 --- */
+    if(modo==="planta"){
+      const it=interactivoCerca(), el=$("accion");
+      if(it){ el.textContent="[E]  "+it.etiqueta; el.style.opacity=1; }
+      else el.style.opacity=0;
+    } else $("accion").style.opacity=0;
   }
 
   renderer.render(scene,camera);
