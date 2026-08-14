@@ -150,49 +150,102 @@ function ruido(ctx,w,h,cant,alpha,color){
 /* ==========================================================
    1. TEXTURAS PROCEDURALES (nada externo, carga instantánea)
    ========================================================== */
-function texPisoGranito(){
+function texPisoGranito(){   // granito pulido, baldosa grande con junta
   const [c,x]=lienzo(256,256);
-  x.fillStyle="#c9c3b4"; x.fillRect(0,0,256,256);
-  for(let i=0;i<5000;i++){
+  x.fillStyle="#cbc5b6"; x.fillRect(0,0,256,256);
+  for(let i=0;i<7000;i++){
     const g=Math.random();
-    x.fillStyle=g<.45?"rgba(90,86,78,.5)":g<.8?"rgba(255,255,255,.5)":"rgba(140,120,95,.45)";
-    x.fillRect(Math.random()*256,Math.random()*256,2,2);
+    x.fillStyle = g<.40 ? "rgba(88,84,76,.55)"
+                : g<.72 ? "rgba(255,255,255,.55)"
+                : g<.90 ? "rgba(146,124,96,.45)"
+                        : "rgba(70,90,80,.30)";
+    const r=Math.random()<.15?3:2;
+    x.fillRect(Math.random()*256,Math.random()*256,r,r);
   }
-  // junta de baldosas + rombo del dibujo del piso
-  x.strokeStyle="rgba(70,68,62,.55)"; x.lineWidth=2;
-  x.strokeRect(1,1,254,254);
-  x.strokeStyle="rgba(120,115,104,.35)"; x.lineWidth=3;
-  x.beginPath(); x.moveTo(128,0); x.lineTo(256,128); x.lineTo(128,256); x.lineTo(0,128); x.closePath(); x.stroke();
+  // junta de la baldosa
+  x.strokeStyle="rgba(96,93,86,.65)"; x.lineWidth=3; x.strokeRect(1.5,1.5,253,253);
+  x.strokeStyle="rgba(255,255,255,.18)"; x.lineWidth=1; x.strokeRect(4,4,248,248);
+  // brillo suave del pulido
+  const g=x.createLinearGradient(0,0,256,256);
+  g.addColorStop(0,"rgba(255,255,255,.06)"); g.addColorStop(.5,"rgba(0,0,0,0)");
+  g.addColorStop(1,"rgba(255,255,255,.05)");
+  x.fillStyle=g; x.fillRect(0,0,256,256);
   return c;
 }
-function texPared(){ // zócalo gris abajo, blanco arriba (como la foto)
-  const [c,x]=lienzo(64,256);
-  const corte=Math.round(256*0.60);
-  x.fillStyle="#ded9cd"; x.fillRect(0,0,64,corte);
-  x.fillStyle="#97a1a3"; x.fillRect(0,corte,64,256-corte);
-  x.fillStyle="rgba(255,255,255,.35)"; x.fillRect(0,corte-3,64,3);
-  x.fillStyle="#7d8688"; x.fillRect(0,248,64,8);
-  ruido(x,64,256,700,.10);
+function texPared(){ // blanco arriba, zócalo gris verdoso abajo (foto 1)
+  const [c,x]=lienzo(128,256);
+  const corte=Math.round(256*0.58);
+  x.fillStyle="#e7e4da"; x.fillRect(0,0,128,corte);
+  x.fillStyle="#99a5a4"; x.fillRect(0,corte,128,256-corte);
+  x.fillStyle="rgba(255,255,255,.42)"; x.fillRect(0,corte-4,128,4);   // filete blanco
+  x.fillStyle="rgba(0,0,0,.10)";      x.fillRect(0,corte,128,3);      // sombra bajo el filete
+  x.fillStyle="#7c8587"; x.fillRect(0,246,128,10);                    // zócalo oscuro
+  // chorreaduras y roces
+  for(let i=0;i<16;i++){
+    const px=Math.random()*128, an=1+Math.random()*3;
+    x.fillStyle=`rgba(120,120,110,${.03+Math.random()*.05})`;
+    x.fillRect(px,Math.random()*60,an,60+Math.random()*120);
+  }
+  for(let i=0;i<9;i++){
+    x.fillStyle=`rgba(60,66,64,${.05+Math.random()*.07})`;
+    x.beginPath(); x.ellipse(Math.random()*128, corte+Math.random()*90,
+      6+Math.random()*16, 3+Math.random()*7, 0, 0, 7); x.fill();
+  }
+  ruido(x,128,256,1200,.09);
   return c;
 }
 function texTecho(){
   const [c,x]=lienzo(128,128);
-  x.fillStyle="#e3e0d8"; x.fillRect(0,0,128,128);
-  ruido(x,128,128,400,.08);
-  x.fillStyle="rgba(120,110,90,.10)";
-  x.beginPath(); x.arc(40,80,26,0,7); x.fill(); // mancha de humedad
+  x.fillStyle="#e6e3da"; x.fillRect(0,0,128,128);
+  x.strokeStyle="rgba(150,148,140,.30)"; x.lineWidth=2;
+  x.strokeRect(1,1,126,126);
+  ruido(x,128,128,450,.07);
+  x.fillStyle="rgba(122,112,92,.10)";
+  x.beginPath(); x.arc(40,80,26,0,7); x.fill();
   return c;
 }
-function texCartelera(){ // el mural de colores del pasillo
-  const [c,x]=lienzo(256,160);
-  x.fillStyle="#3a3f34"; x.fillRect(0,0,256,160);
-  const cols=["#7ab648","#c9d94a","#4aa3c9","#d98b4a","#b64a7a","#4ac98b"];
-  for(let i=0;i<7;i++)for(let j=0;j<4;j++){
-    x.fillStyle=cols[(i+j)%cols.length];
-    x.globalAlpha=.75+Math.random()*.25;
-    x.fillRect(8+i*35,10+j*36,28,30);
+function texBandeja(){ // chapa galvanizada perforada de la bandeja portacables
+  const [c,x]=lienzo(128,64);
+  x.fillStyle="#a8aeb2"; x.fillRect(0,0,128,64);
+  x.fillStyle="rgba(255,255,255,.18)"; x.fillRect(0,0,128,6);
+  x.fillStyle="rgba(0,0,0,.22)"; x.fillRect(0,58,128,6);
+  for(let i=4;i<128;i+=11){                       // ranuras
+    x.fillStyle="rgba(40,44,48,.55)"; x.fillRect(i,18,5,28);
+    x.fillStyle="rgba(255,255,255,.10)"; x.fillRect(i,16,5,2);
   }
-  x.globalAlpha=1;
+  ruido(x,128,64,200,.10);
+  return c;
+}
+function texTablero(){ // frente del tablero eléctrico crema (foto 1, pared izquierda)
+  const [c,x]=lienzo(128,256);
+  x.fillStyle="#d8d2bf"; x.fillRect(0,0,128,256);
+  x.strokeStyle="rgba(90,86,72,.45)"; x.lineWidth=3; x.strokeRect(6,6,116,244);
+  x.fillStyle="rgba(255,255,255,.25)"; x.fillRect(9,9,110,3);
+  x.fillStyle="rgba(70,66,56,.35)"; x.fillRect(60,10,3,236);    // junta de puertas
+  x.fillStyle="#8d8878"; x.fillRect(66,120,10,26);              // manija
+  x.fillStyle="#b03a2e"; x.fillRect(20,26,7,7);                 // pilotos
+  x.fillStyle="#d9a441"; x.fillRect(31,26,7,7);
+  x.fillStyle="#e9e6dd"; x.fillRect(78,30,34,16);               // etiqueta
+  ruido(x,128,256,500,.10);
+  return c;
+}
+function texCartelera(){ // la cartelera de trabajos del pasillo (foto 1)
+  const [c,x]=lienzo(512,320); x.scale(2,2);
+  x.fillStyle="#6d5a3a"; x.fillRect(0,0,256,160);           // marco de madera
+  x.fillStyle="#3e4a35"; x.fillRect(7,7,242,146);           // fondo verde
+  const cols=["#8cc63f","#c9d94a","#4aa3c9","#d98b4a","#b64a7a","#4ac98b","#e0c341"];
+  for(let i=0;i<7;i++)for(let j=0;j<4;j++){
+    const px=12+i*34, py=12+j*35;
+    x.fillStyle=cols[(i*3+j)%cols.length];
+    x.globalAlpha=.78+Math.random()*.22;
+    x.fillRect(px,py,28,30);
+    x.globalAlpha=1;
+    x.strokeStyle="rgba(0,0,0,.25)"; x.lineWidth=1; x.strokeRect(px+.5,py+.5,27,29);
+    x.fillStyle="rgba(255,255,255,.35)";                     // garabatos
+    for(let k=0;k<3;k++) x.fillRect(px+4+Math.random()*16, py+5+Math.random()*20, 2+Math.random()*8, 2);
+    x.fillStyle="#d9d5c8"; x.fillRect(px+11,py-2,6,4);       // chinche/cinta
+  }
+  ruido(x,256,160,300,.10);
   return c;
 }
 function texCartel(txt, fondo="#1f6b3a", tinta="#eaf6ee", tam=54){
@@ -201,7 +254,8 @@ function texCartel(txt, fondo="#1f6b3a", tinta="#eaf6ee", tam=54){
   x.strokeStyle="rgba(255,255,255,.25)"; x.lineWidth=4; x.strokeRect(6,6,500,116);
   x.fillStyle=tinta; x.font=`${tam}px ui-monospace, monospace`;
   x.textAlign="center"; x.textBaseline="middle";
-  x.fillText(txt, 256, 68);
+  const lineas=String(txt).split("\n");
+  lineas.forEach((l,i)=> x.fillText(l, 256, 68 + (i-(lineas.length-1)/2)*(tam*1.25)));
   ruido(x,512,128,300,.10);
   return c;
 }
@@ -451,19 +505,26 @@ camera.add(halo);
 /* ==========================================================
    4. MUNDO A — EL PASILLO DE LA ESCUELA
    ========================================================== */
-const ANCHO = 4.4, ALTO = 4.1, LARGO = 46;      // pasillo
+const ANCHO = 3.8, ALTO = 3.35, LARGO = 46;     // pasillo (medidas de la foto)
 const Z_FONDO = -LARGO + 1, Z_ATRAS = 1.0;      // extremos
-const SALA = {x1:-2.7, x2:2.7, z1:1.0, z2:7.4};  // sala del ascensor (foto 2)
+const SALA = {x1:-2.5, x2:2.5, z1:1.0, z2:7.2};  // hall del ascensor (foto 3)
+const MX = ANCHO/2;                              // pared izquierda/derecha
 
 const mundoPasillo = new THREE.Group();
 scene.add(mundoPasillo);
 
-const matPiso   = new THREE.MeshLambertMaterial({map:texDe(texPisoGranito(), 5, 46)});
-const matPared  = new THREE.MeshLambertMaterial({map:texDe(texPared(), 14, 1, false)});
-const matTecho  = new THREE.MeshLambertMaterial({map:texDe(texTecho(), 6, 24)});
+const matPiso   = new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(), 7, 84),
+                                               shininess:24, specular:0x24261f});
+const matPared  = new THREE.MeshLambertMaterial({map:texDe(texPared(), 16, 1, false)});
+const matTecho  = new THREE.MeshLambertMaterial({map:texDe(texTecho(), 5, 36)});
 const matMetal  = new THREE.MeshLambertMaterial({color:0x9aa0a4});
+const matGalva  = new THREE.MeshLambertMaterial({map:texDe(texBandeja(), 10, 1)});
 const matOscuro = new THREE.MeshLambertMaterial({color:0x2b2f33});
 const matRojo   = new THREE.MeshLambertMaterial({color:0x8e1b16});
+const matRojoV  = new THREE.MeshLambertMaterial({color:0xa8281c});
+const matBlanco = new THREE.MeshLambertMaterial({color:0xeceae0});
+const matCrema  = new THREE.MeshLambertMaterial({color:0xd8d2bf});
+const matMadera = new THREE.MeshLambertMaterial({color:0xb3afa2});   // puertas gris claro
 
 function caja(w,h,d,mat,x,y,z,padre){
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
@@ -474,171 +535,330 @@ function plano(w,h,mat,x,y,z,rx,ry,padre){
   m.position.set(x,y,z); m.rotation.set(rx||0, ry||0, 0);
   (padre||mundoPasillo).add(m); return m;
 }
-
-// piso / techo / paredes
-plano(ANCHO, LARGO, matPiso, 0, 0, (Z_ATRAS+Z_FONDO)/2, -Math.PI/2, 0);
-plano(ANCHO, LARGO, matTecho, 0, ALTO, (Z_ATRAS+Z_FONDO)/2, Math.PI/2, 0);
-plano(LARGO, ALTO, matPared, -ANCHO/2, ALTO/2, (Z_ATRAS+Z_FONDO)/2, 0, Math.PI/2);
-plano(LARGO, ALTO, matPared,  ANCHO/2, ALTO/2, (Z_ATRAS+Z_FONDO)/2, 0, -Math.PI/2);
-
-// pared del fondo con las puertas vidriadas (foto 1)
-const matVidrio = new THREE.MeshBasicMaterial({color:0xdfe8ee});
-caja(ANCHO, ALTO, .3, matPared, 0, ALTO/2, Z_FONDO-.15);
-caja(2.0, 2.5, .06, matVidrio, 0, 1.3, Z_FONDO-.02);
-caja(2.2, .12, .14, matOscuro, 0, 2.62, Z_FONDO-.05);
-caja(.1, 2.6, .14, matOscuro, -1.05, 1.3, Z_FONDO-.05);
-caja(.1, 2.6, .14, matOscuro,  1.05, 1.3, Z_FONDO-.05);
-caja(.06, 2.6, .1, matOscuro, 0, 1.3, Z_FONDO-.05);
-const luzFondo = new THREE.PointLight(0x9fc4d8, 1.6, 14);
-luzFondo.position.set(0, 1.9, Z_FONDO+1.2); mundoPasillo.add(luzFondo);
-
-// pared de atrás (con el vano de la foto 2)
-caja(1.55, ALTO, .3, matPared, -1.45, ALTO/2, Z_ATRAS+.15);
-caja(1.55, ALTO, .3, matPared,  1.45, ALTO/2, Z_ATRAS+.15);
-caja(1.35, ALTO-2.25, .3, matPared, 0, ALTO-(ALTO-2.25)/2, Z_ATRAS+.15);
-// marco blanco del vano
-caja(.12,2.3,.34, new THREE.MeshLambertMaterial({color:0xf0ece2}), -.66, 1.15, Z_ATRAS+.15);
-caja(.12,2.3,.34, new THREE.MeshLambertMaterial({color:0xf0ece2}),  .66, 1.15, Z_ATRAS+.15);
-caja(1.44,.12,.34, new THREE.MeshLambertMaterial({color:0xf0ece2}), 0, 2.28, Z_ATRAS+.15);
-
-// bandejas portacables colgadas (el detalle metálico de la foto)
-for(let z=Z_ATRAS-1; z>Z_FONDO; z-=2.2){
-  caja(.42,.06,2.0, matMetal, -ANCHO/2+.28, 3.32, z);
-  caja(.42,.06,2.0, matMetal,  ANCHO/2-.28, 3.32, z);
-  caja(.05,.5,.05, matMetal, -ANCHO/2+.28, 3.6, z);
-  caja(.05,.5,.05, matMetal,  ANCHO/2-.28, 3.6, z);
-}
-// caño rojo de incendios
-caja(.14,.14,LARGO-2, matRojo, ANCHO/2-.5, 3.05, (Z_ATRAS+Z_FONDO)/2);
-
-// LUCES DEL TECHO — paneles fluorescentes
 const luces = [];
-const matPanel = ()=> new THREE.MeshBasicMaterial({color:0xf6f2e2});
-for(let z=Z_ATRAS-2.5; z>Z_FONDO+1.5; z-=5.2){
-  const panel = plano(1.15,.34, matPanel(), 0, ALTO-.04, z, Math.PI/2, 0);
-  const luz = new THREE.PointLight(0xdfeaf2, 1.25, 12.5, 1.6);
-  luz.position.set(0, ALTO-.35, z); mundoPasillo.add(luz);
-  luces.push({luz, panel, prendida:true, t:rnd(2,26), mundo:"pasillo"});
+
+/* muchas piezas iguales (ménsulas, barrotes, hojas de puerta) en una sola llamada
+   de dibujo: baja de ~500 draw calls a ~150 sin cambiar nada visual */
+function instancias(geo, mat, lista){
+  const m=new THREE.InstancedMesh(geo, mat, lista.length);
+  const d=new THREE.Object3D();
+  lista.forEach((it,i)=>{
+    d.position.set(it[0],it[1],it[2]);
+    d.rotation.set(it[3]||0, it[4]||0, it[5]||0);
+    d.updateMatrix(); m.setMatrixAt(i, d.matrix);
+  });
+  m.instanceMatrix.needsUpdate=true;
+  mundoPasillo.add(m);
+  return m;
 }
 
-// PUERTAS de aulas + matafuegos + carteles
-const matPuerta = new THREE.MeshLambertMaterial({color:0x6f6a5e});
-for(let i=0;i<9;i++){
-  const z = Z_ATRAS-4 - i*4.6;
-  const lado = i%2? 1:-1;
-  caja(.08, 2.15, 1.0, matPuerta, lado*(ANCHO/2-.06), 1.07, z);
-  if(i%3===1){
-    caja(.16,.7,.24, matRojo, lado*(ANCHO/2-.12), 1.25, z+1.4);
-  }
-}
-// mural de colores (foto 1, pared derecha)
-plano(1.9,1.2, new THREE.MeshLambertMaterial({map:texDe(texCartelera(),1,1,false)}),
-      ANCHO/2-.06, 1.85, -6.5, 0, -Math.PI/2);
-// cartel SALIDA verde
-plano(.5,.18, new THREE.MeshBasicMaterial({color:0x2ecc71}), ANCHO/2-.07, 2.75, -1.2, 0, -Math.PI/2);
+/* ---------- caja del pasillo ---------- */
+plano(ANCHO, LARGO, matPiso,  0, 0,    (Z_ATRAS+Z_FONDO)/2, -Math.PI/2, 0);
+plano(ANCHO, LARGO, matTecho, 0, ALTO, (Z_ATRAS+Z_FONDO)/2,  Math.PI/2, 0);
+plano(LARGO, ALTO, matPared, -MX, ALTO/2, (Z_ATRAS+Z_FONDO)/2, 0,  Math.PI/2);
+plano(LARGO, ALTO, matPared,  MX, ALTO/2, (Z_ATRAS+Z_FONDO)/2, 0, -Math.PI/2);
 
-/* --- PLANO DE EVACUACIÓN (la chapa de la pared, foto del plano) --- */
-plano(1.55,.92, new THREE.MeshLambertMaterial({map:texPlana(texPlanoEvacuacion())}),
-      ANCHO/2-.075, 1.95, -.9, 0, -Math.PI/2);
-caja(.03,1.02,1.65, matMetal, ANCHO/2-.045, 1.95, -.9);   // marco, por detrás
-
-/* --- BIBLIOTECA (pared norte del plano) --- */
-(function biblioteca(){
-  const z=-13.2;
-  caja(.09,2.2,1.9, new THREE.MeshLambertMaterial({color:0x5d5a50}), -ANCHO/2+.05, 1.1, z);
-  caja(.11,2.2,.05, matOscuro, -ANCHO/2+.055, 1.1, z);            // junta entre hojas
-  caja(.1,.1,2.0, matOscuro, -ANCHO/2+.05, 2.22, z);
-  [z-.18,z+.18].forEach(zz=> caja(.12,.05,.22, matMetal, -ANCHO/2+.1, 1.05, zz));
-  plano(1.5,.38, new THREE.MeshLambertMaterial({map:texPlana(texCartel("BIBLIOTECA","#26333d","#e8e4d9",44))}),
-        -ANCHO/2+.06, 2.62, z, 0, Math.PI/2);
+/* ---------- puertas del fondo, con la luz del día atrás (foto 1) ---------- */
+(function fondo(){
+  const z=Z_FONDO;
+  caja(ANCHO, ALTO, .3, matPared, 0, ALTO/2, z-.15);
+  const vidrio=new THREE.MeshBasicMaterial({color:0xdfe8ee});
+  caja(1.9, 2.15, .05, vidrio, 0, 1.15, z-.02);            // hojas vidriadas
+  caja(1.9, .52, .05, vidrio, 0, 2.52, z-.02);             // banderola
+  caja(2.16, .1, .13, matBlanco, 0, 2.30, z-.05);
+  caja(2.16, .1, .13, matBlanco, 0, 2.84, z-.05);
+  caja(.1, 2.9, .13, matBlanco, -1.03, 1.5, z-.05);
+  caja(.1, 2.9, .13, matBlanco,  1.03, 1.5, z-.05);
+  caja(.05, 2.2, .1, matBlanco, 0, 1.15, z-.06);           // junta central
+  [-.18,.18].forEach(dx=> caja(.05,.5,.06, matMetal, dx, 1.05, z-.08));
+  plano(.52,.17, new THREE.MeshBasicMaterial({map:texPlana(texCartel("SALIDA","#1f8a4c","#f2fff6",58))}),
+        0, 3.05, z-.06);
+  const l=new THREE.PointLight(0xa9c8dc, 1.7, 15); l.position.set(0,1.9,z+1.3);
+  mundoPasillo.add(l);
 })();
 
-/* --- ESCALERAS del plano: huecos oscuros con cartel de salida --- */
-function escalera(z, lado){
-  const x = lado*(ANCHO/2-.02);
-  const marco = new THREE.MeshLambertMaterial({color:0xf0ece2});
-  caja(.5,.12,1.62, marco, x-lado*.24, 2.36, z);
-  caja(.5,2.36,.1, marco, x-lado*.24, 1.18, z-.8);
-  caja(.5,2.36,.1, marco, x-lado*.24, 1.18, z+.8);
-  // hueco negro + escalones que bajan hacia la oscuridad
-  plano(1.5,2.3, new THREE.MeshBasicMaterial({color:0x05070a}), x-lado*.02, 1.15, z, 0, -lado*Math.PI/2);
-  for(let i=0;i<6;i++)
-    caja(.42,.07,1.4, matOscuro, x-lado*(.46-i*.085), .10+i*.19, z);
-  plano(.62,.2, new THREE.MeshBasicMaterial({color:0x2ecc71}), x-lado*.03, 2.62, z, 0, -lado*Math.PI/2);
-}
-escalera(-8.6, -1);    // escalera 1 (izquierda)
-escalera(-24.5, 1);    // escalera 2 (derecha)
+/* ---------- pared de atrás con el vano al hall del ascensor (foto 3) ---------- */
+caja((ANCHO-1.05)/2, ALTO, .3, matPared, -(ANCHO+1.05)/4, ALTO/2, Z_ATRAS+.15);
+caja((ANCHO-1.05)/2, ALTO, .3, matPared,  (ANCHO+1.05)/4, ALTO/2, Z_ATRAS+.15);
+caja(1.1, ALTO-2.3, .3, matPared, 0, ALTO-(ALTO-2.3)/2, Z_ATRAS+.15);
+caja(.14,2.36,.36, matBlanco, -.60, 1.18, Z_ATRAS+.15);        // marco grueso pintado
+caja(.14,2.36,.36, matBlanco,  .60, 1.18, Z_ATRAS+.15);
+caja(1.34,.14,.36, matBlanco, 0, 2.33, Z_ATRAS+.15);
+caja(.06,2.2,.05, matBlanco, .52, 1.15, Z_ATRAS-.08);          // hoja abierta contra la pared
+for(let i=0;i<7;i++) caja(.05,.05,.5, matBlanco, .52, .35+i*.29, Z_ATRAS-.32);   // reja de la hoja
 
-/* --- VENTANALES AL PATIO (lado del patio en el plano) --- */
-for(let i=0;i<3;i++){
-  const z=-17.5-i*8.5;
-  plano(1.5,1.35, new THREE.MeshBasicMaterial({color:0x0b1220}), -ANCHO/2+.05, 2.0, z, 0, Math.PI/2);
-  for(let j=0;j<8;j++) caja(.05,1.4,.05, new THREE.MeshLambertMaterial({color:0xe6e2d8}),
-    -ANCHO/2+.12, 2.0, z-.7+j*.2);
-  caja(.14,.1,1.6, matPared, -ANCHO/2+.1, 1.28, z);
-}
+/* ---------- BANDEJAS PORTACABLES + MÉNSULAS (el detalle de la foto) ---------- */
+(function bandejas(){
+  const y=ALTO-.62;
+  const tramos=[], mens=[], riost=[], perf=[], tens=[];
+  [-1,1].forEach(lado=>{
+    const xp=lado*MX;
+    for(let z=Z_ATRAS-.6; z>Z_FONDO+.6; z-=6.0) tramos.push([xp-lado*.30, y, z-3.0]);
+    for(let z=Z_ATRAS-.8; z>Z_FONDO+.6; z-=1.45){
+      mens .push([xp-lado*.28, y-.05, z]);
+      riost.push([xp-lado*.16, y-.20, z, 0,0, lado*0.72]);
+      perf .push([xp-lado*.03, y+.13, z]);
+    }
+    for(let z=Z_ATRAS-2.2; z>Z_FONDO+.6; z-=4.35) tens.push([xp-lado*.46, ALTO-.32, z]);
+  });
+  instancias(new THREE.BoxGeometry(.46,.05,6.0), matGalva, tramos);   // tramos de bandeja
+  instancias(new THREE.BoxGeometry(.56,.05,.05), matMetal, mens);     // ménsulas
+  instancias(new THREE.BoxGeometry(.42,.04,.04), matMetal, riost);    // riostras
+  instancias(new THREE.BoxGeometry(.05,.30,.05), matMetal, perf);     // perfiles verticales
+  instancias(new THREE.BoxGeometry(.02,.62,.02), matMetal, tens);     // tensores al techo
+})();
+// bandeja que cruza el techo en la boca del pasillo
+caja(ANCHO-.5,.05,.44, matGalva, 0, ALTO-.28, Z_ATRAS-1.15);
+[-1,1].forEach(l=> caja(.02,.28,.02, matMetal, l*(MX-.5), ALTO-.14, Z_ATRAS-1.15));
 
-// bancos
-[[-1.55,-4.2],[1.5,-9.4],[-1.5,-15.2]].forEach(([x,z])=>{
-  caja(.5,.05,1.5, matMetal, x, .52, z);
-  caja(.05,.52,.05, matMetal, x-.2, .26, z-.6);
-  caja(.05,.52,.05, matMetal, x+.2, .26, z-.6);
-  caja(.05,.52,.05, matMetal, x-.2, .26, z+.6);
-  caja(.05,.52,.05, matMetal, x+.2, .26, z+.6);
+/* ---------- caño rojo de incendio + bajadas ---------- */
+caja(.13,.13,LARGO-2.4, matRojo, MX-.42, ALTO-.32, (Z_ATRAS+Z_FONDO)/2);
+[-4.2,-19.5,-34.0].forEach(z=>{
+  caja(.12,2.1,.12, matRojo, MX-.42, 1.35, z);                 // bajada vertical
+  caja(.2,.2,.2,   matRojo, MX-.42, 2.36, z);                  // codo
 });
 
-// METEGOL (el de la foto, a la derecha al arrancar)
+/* ---------- LUCES DEL TECHO: panel cuadrado + tubos ---------- */
+const matPanel = ()=> new THREE.MeshBasicMaterial({color:0xf6f2e2});
+let iLuz=0;
+for(let z=Z_ATRAS-2.0; z>Z_FONDO+1.5; z-=5.0){
+  const cuadrado = (iLuz%2===0);
+  const panel = cuadrado
+    ? plano(1.15,1.15, matPanel(), 0, ALTO-.02, z, Math.PI/2, 0)
+    : plano(1.30,.28,  matPanel(), 0, ALTO-.10, z, Math.PI/2, 0);
+  if(cuadrado){                                                 // marco del artefacto
+    caja(1.3,.06,.1, matBlanco, 0, ALTO-.05, z-.62);
+    caja(1.3,.06,.1, matBlanco, 0, ALTO-.05, z+.62);
+    caja(.1,.06,1.3, matBlanco, -.62, ALTO-.05, z);
+    caja(.1,.06,1.3, matBlanco,  .62, ALTO-.05, z);
+  } else {                                                      // tubo colgado de varillas
+    caja(1.34,.09,.32, matBlanco, 0, ALTO-.14, z);
+    [-.5,.5].forEach(dx=> caja(.015,.14,.015, matMetal, dx, ALTO-.07, z));
+  }
+  const luz = new THREE.PointLight(0xdfeaf2, 1.25, 12.5, 1.6);
+  luz.position.set(0, ALTO-.45, z); mundoPasillo.add(luz);
+  luces.push({luz, panel, prendida:true, t:rnd(2,26), mundo:"pasillo"});
+  iLuz++;
+}
+
+/* ---------- puertas de aula, marcos y cajas de luz ---------- */
+(function aulas(){
+  const hojas=[], dinteles=[], jambas=[], picaportes=[], cajitas=[];
+  for(let i=0;i<9;i++){
+    const z = Z_ATRAS-4 - i*4.6, lado = i%2? 1:-1, xp=lado*MX;
+    hojas   .push([xp-lado*.02, 1.06, z]);
+    dinteles.push([xp-lado*.03, 2.17, z]);
+    jambas  .push([xp-lado*.03, 1.08, z-.52]);
+    jambas  .push([xp-lado*.03, 1.08, z+.52]);
+    picaportes.push([xp-lado*.09, 1.02, z+.36]);
+    if(i%3===1) cajitas.push([xp-lado*.07, 2.55, z+1.5]);
+  }
+  instancias(new THREE.BoxGeometry(.07,2.12,1.0), matMadera, hojas);
+  instancias(new THREE.BoxGeometry(.1,.1,1.16),  matBlanco, dinteles);
+  instancias(new THREE.BoxGeometry(.1,2.16,.08), matBlanco, jambas);
+  instancias(new THREE.BoxGeometry(.1,.05,.16),  matMetal,  picaportes);
+  instancias(new THREE.BoxGeometry(.16,.24,.16), matCrema,  cajitas);
+})();
+
+/* ---------- TABLERO ELÉCTRICO de la pared izquierda (foto 1) ---------- */
+(function tablero(){
+  const z=-1.35, xp=-MX;
+  const m=new THREE.MeshLambertMaterial({map:texPlana(texTablero())});
+  caja(.20,1.55,.66, matCrema, xp+.10, 1.82, z);
+  plano(.66,1.55, m, xp+.205, 1.82, z, 0, -Math.PI/2);
+  caja(.06,.22,.06, matOscuro, xp+.16, 1.05, z-.30);            // caño que baja
+  caja(.06,1.5,.06, matOscuro, xp+.16, 1.85, z-.42);
+  // tablero secundario más chico, más adelante
+  caja(.16,.62,.44, matCrema, xp+.08, 2.05, -12.4);
+  caja(.17,.05,.46, matOscuro, xp+.085, 1.73, -12.4);
+})();
+
+/* ---------- cartelera de trabajos + carteles ---------- */
+plano(1.9,1.2, new THREE.MeshLambertMaterial({map:texPlana(texCartelera())}),
+      MX-.05, 1.88, -6.6, 0, -Math.PI/2);
+plano(.62,.2, new THREE.MeshBasicMaterial({map:texPlana(texCartel("SALIDA","#1f8a4c","#f2fff6",58))}),
+      MX-.05, 2.62, -8.9, 0, -Math.PI/2);
+plano(.34,.42, new THREE.MeshLambertMaterial({map:texPlana(texCartel("TÓMESE DEL\nPASAMANOS","#eceae0","#2b2f33",26))}),
+      -MX+.05, 2.05, -.35, 0, Math.PI/2);
+
+/* ---------- matafuegos y nicho de hidrante (foto 1, a la derecha) ---------- */
+function matafuego(z, lado){
+  const xp=lado*MX;
+  caja(.10,.62,.36, matBlanco, xp-lado*.05, 1.28, z);           // chapa de apoyo
+  const t=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.5,10), matRojoV);
+  t.position.set(xp-lado*.16, 1.25, z); mundoPasillo.add(t);
+  caja(.09,.1,.09, matOscuro, xp-lado*.16, 1.55, z);
+  plano(.2,.26, new THREE.MeshBasicMaterial({color:0xb03a2e}), xp-lado*.055, 1.78, z, 0, -lado*Math.PI/2);
+}
+matafuego(-3.1, 1); matafuego(-16.8, -1); matafuego(-31.5, 1);
+(function nichoHidrante(){                                       // gabinete rojo con vidrio
+  const z=-1.9, xp=MX;
+  caja(.26,1.15,.72, matRojoV, xp-.13, 1.62, z);
+  caja(.05,.95,.56, new THREE.MeshBasicMaterial({color:0x2b3138}), xp-.27, 1.62, z);
+  caja(.06,1.0,.06, matRojo, xp-.27, 1.62, z-.29);
+  caja(.06,1.0,.06, matRojo, xp-.27, 1.62, z+.29);
+})();
+
+/* ---------- mesas blancas y banquetas ---------- */
+function mesa(x,z,rot){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot||0;
+  const t=new THREE.Mesh(new THREE.BoxGeometry(.62,.05,1.25), matBlanco);
+  t.position.y=.74; g.add(t);
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.58,.04,1.2), new THREE.MeshLambertMaterial({color:0xb9b6ab}));
+  b.position.y=.71; g.add(b);
+  [[-.24,-.52],[.24,-.52],[-.24,.52],[.24,.52]].forEach(([px,pz])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.72,6), matMetal);
+    p.position.set(px,.36,pz); g.add(p);
+  });
+  mundoPasillo.add(g);
+}
+function banqueta(x,z){
+  const g=new THREE.Group(); g.position.set(x,0,z);
+  const as=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.05,10),
+    new THREE.MeshLambertMaterial({color:0x8d6a3c}));
+  as.position.y=.52; g.add(as);
+  for(let i=0;i<4;i++){
+    const a=i*Math.PI/2+.4;
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.52,6), matMetal);
+    p.position.set(Math.cos(a)*.12,.26,Math.sin(a)*.12); g.add(p);
+  }
+  mundoPasillo.add(g);
+}
+mesa(-1.35,-4.6,0); mesa(1.30,-11.2,0); mesa(-1.35,-19.6,0); mesa(1.30,-27.4,0);
+banqueta(1.42,-5.4); banqueta(1.30,-6.2); banqueta(-1.40,-13.5); banqueta(1.38,-22.0);
+
+/* ---------- tacho de basura ---------- */
+(function tacho(){
+  const g=new THREE.Group(); g.position.set(-1.44,0,-9.8);
+  const c=new THREE.Mesh(new THREE.CylinderGeometry(.19,.16,.62,12),
+    new THREE.MeshLambertMaterial({color:0x2f5b3f}));
+  c.position.y=.31; g.add(c);
+  const t=new THREE.Mesh(new THREE.CylinderGeometry(.20,.20,.05,12), matOscuro);
+  t.position.y=.64; g.add(t);
+  mundoPasillo.add(g);
+})();
+
+/* ---------- METEGOL (el de la foto, a la derecha al arrancar) ---------- */
 (function metegol(){
-  const g=new THREE.Group(); g.position.set(1.35,0,-2.6); g.rotation.y=-.28;
-  const cuerpo=new THREE.Mesh(new THREE.BoxGeometry(.72,.22,1.35), matOscuro);
-  cuerpo.position.y=.86; g.add(cuerpo);
-  const pasto=new THREE.Mesh(new THREE.PlaneGeometry(.6,1.2), new THREE.MeshLambertMaterial({color:0x2f6b34}));
-  pasto.rotation.x=-Math.PI/2; pasto.position.y=.975; g.add(pasto);
-  const barra=new THREE.CylinderGeometry(.017,.017,1.1,6);
+  const g=new THREE.Group(); g.position.set(1.18,0,-3.5); g.rotation.y=-.20;
+  const cuerpo=new THREE.Mesh(new THREE.BoxGeometry(.70,.24,1.32), matOscuro);
+  cuerpo.position.y=.84; g.add(cuerpo);
+  const canto=new THREE.Mesh(new THREE.BoxGeometry(.74,.05,1.36),
+    new THREE.MeshLambertMaterial({color:0x3a4046}));
+  canto.position.y=.97; g.add(canto);
+  const pasto=new THREE.Mesh(new THREE.PlaneGeometry(.58,1.18),
+    new THREE.MeshLambertMaterial({color:0x2f6b34}));
+  pasto.rotation.x=-Math.PI/2; pasto.position.y=.955; g.add(pasto);
+  const barra=new THREE.CylinderGeometry(.016,.016,1.05,6);
   for(let i=0;i<6;i++){
     const b=new THREE.Mesh(barra, matMetal);
     b.rotation.z=Math.PI/2; b.position.set(0,1.0,-.5+i*.2); g.add(b);
     const col = i%2? 0xd8452a : 0x2a5fd8;
     for(let j=0;j<3;j++){
-      const m=new THREE.Mesh(new THREE.BoxGeometry(.06,.13,.05), new THREE.MeshLambertMaterial({color:col}));
-      m.position.set(-.22+j*.22, .94, -.5+i*.2); g.add(m);
+      const m=new THREE.Mesh(new THREE.BoxGeometry(.055,.13,.05),
+        new THREE.MeshLambertMaterial({color:col}));
+      m.position.set(-.20+j*.20,.94,-.5+i*.2); g.add(m);
     }
+    const man=new THREE.Mesh(new THREE.CylinderGeometry(.032,.032,.12,8),
+      new THREE.MeshLambertMaterial({color:i%2?0xd9a441:0x1b1d20}));
+    man.rotation.z=Math.PI/2; man.position.set(-.56,1.0,-.5+i*.2); g.add(man);
   }
-  [[-.3,-.6],[.3,-.6],[-.3,.6],[.3,.6]].forEach(([x,z])=>{
-    const p=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.75,6), matMetal);
-    p.position.set(x,.38,z); g.add(p);
+  [[-.29,-.58],[.29,-.58],[-.29,.58],[.29,.58]].forEach(([x,z])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.028,.028,.74,6), matMetal);
+    p.position.set(x,.37,z); g.add(p);
   });
   mundoPasillo.add(g);
 })();
 
-/* --- SALA DEL ASCENSOR (foto 2) --- */
-(function sala(){
-  const w=SALA.x2-SALA.x1, d=SALA.z2-SALA.z1, cz=(SALA.z1+SALA.z2)/2, h=3.3;
-  const matPisoSala=new THREE.MeshLambertMaterial({map:texDe(texPisoGranito(),3,4)});
-  plano(w,d,matPisoSala,0,.001,cz,-Math.PI/2,0);
-  plano(w,d,new THREE.MeshLambertMaterial({color:0xd9dbd6}),0,h,cz,Math.PI/2,0);
-  plano(d,h,matPared,SALA.x1,h/2,cz,0,Math.PI/2);
-  plano(d,h,matPared,SALA.x2,h/2,cz,0,-Math.PI/2);
-  plano(w,h,matPared,0,h/2,SALA.z2,0,Math.PI);
+/* ---------- PLANO DE EVACUACIÓN (la chapa de la pared, foto 2) ---------- */
+plano(1.45,.86, new THREE.MeshLambertMaterial({map:texPlana(texPlanoEvacuacion())}),
+      MX-.075, 1.92, -.75, 0, -Math.PI/2);
+caja(.03,.94,1.53, matMetal, MX-.045, 1.92, -.75);
 
-  // puertas del ascensor (gris azulado)
+/* ---------- BIBLIOTECA (pared norte del plano) ---------- */
+(function biblioteca(){
+  const z=-13.2, xp=-MX;
+  caja(.09,2.2,1.9, new THREE.MeshLambertMaterial({color:0x8a8578}), xp+.05, 1.1, z);
+  caja(.11,2.2,.05, matOscuro, xp+.055, 1.1, z);
+  caja(.1,.1,2.0, matBlanco, xp+.05, 2.25, z);
+  [z-.18,z+.18].forEach(zz=> caja(.12,.05,.22, matMetal, xp+.1, 1.05, zz));
+  plano(1.5,.38, new THREE.MeshLambertMaterial({map:texPlana(texCartel("BIBLIOTECA","#26333d","#e8e4d9",44))}),
+        xp+.06, 2.66, z, 0, Math.PI/2);
+})();
+
+/* ---------- ESCALERAS del plano ---------- */
+function escalera(z, lado){
+  const x = lado*(MX-.02);
+  caja(.5,.12,1.62, matBlanco, x-lado*.24, 2.40, z);
+  caja(.5,2.40,.1, matBlanco, x-lado*.24, 1.20, z-.8);
+  caja(.5,2.40,.1, matBlanco, x-lado*.24, 1.20, z+.8);
+  plano(1.5,2.34, new THREE.MeshBasicMaterial({color:0x05070a}), x-lado*.02, 1.17, z, 0, -lado*Math.PI/2);
+  for(let i=0;i<6;i++)
+    caja(.42,.07,1.4, matOscuro, x-lado*(.46-i*.085), .10+i*.19, z);
+  plano(.62,.2, new THREE.MeshBasicMaterial({map:texPlana(texCartel("SALIDA","#1f8a4c","#f2fff6",58))}),
+        x-lado*.03, 2.66, z, 0, -lado*Math.PI/2);
+}
+escalera(-8.6, -1);
+escalera(-24.5, 1);
+
+/* ---------- VENTANALES CON REJA AL PATIO ---------- */
+(function ventanales(){
+  const barrotes=[];
+  for(let i=0;i<3;i++){
+    const z=-17.5-i*8.5, xp=-MX;
+    plano(1.5,1.3, new THREE.MeshBasicMaterial({color:0x0b1220}), xp+.05, 2.02, z, 0, Math.PI/2);
+    for(let j=0;j<8;j++) barrotes.push([xp+.12, 2.02, z-.7+j*.2]);
+    caja(.14,.1,1.6, matPared, xp+.1, 1.32, z);
+    caja(.12,1.44,.09, matBlanco, xp+.06, 2.02, z-.79);
+    caja(.12,1.44,.09, matBlanco, xp+.06, 2.02, z+.79);
+  }
+  instancias(new THREE.BoxGeometry(.05,1.34,.05), matBlanco, barrotes);
+})();
+
+/* ==========================================================
+   HALL DEL ASCENSOR (foto 3)
+   ========================================================== */
+(function hall(){
+  const w=SALA.x2-SALA.x1, d=SALA.z2-SALA.z1, cz=(SALA.z1+SALA.z2)/2, h=3.1;
+  const matPisoSala=new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(),4,5),
+                                                 shininess:22, specular:0x24261f});
+  plano(w,d,matPisoSala,0,.002,cz,-Math.PI/2,0);
+  plano(w,d,new THREE.MeshLambertMaterial({color:0xd7dbdd}),0,h,cz,Math.PI/2,0);
+  const matHall=new THREE.MeshLambertMaterial({map:texDe(texPared(),4,1,false), color:0xd6e4ef});
+  plano(d,h,matHall,SALA.x1,h/2,cz,0, Math.PI/2);
+  plano(d,h,matHall,SALA.x2,h/2,cz,0,-Math.PI/2);
+  plano(w,h,matHall,0,h/2,SALA.z2,0,Math.PI);
+
+  // puertas del ascensor: dos hojas gris azuladas con junta y llamador
   const matAsc=new THREE.MeshLambertMaterial({color:0x66798c});
-  caja(1.7,2.3,.1,matAsc,-.6,1.15,SALA.z2-.06);
-  caja(.04,2.3,.12,new THREE.MeshLambertMaterial({color:0x3d4a57}),-.6,1.15,SALA.z2-.12);
-  caja(1.86,.14,.16,matOscuro,-.6,2.37,SALA.z2-.08);
+  const zp=SALA.z2-.05;
+  caja(.85,2.25,.09, matAsc, -1.03, 1.13, zp);
+  caja(.85,2.25,.09, matAsc, -.17,  1.13, zp);
+  caja(.04,2.25,.11, new THREE.MeshLambertMaterial({color:0x3d4a57}), -.60, 1.13, zp-.01);
+  caja(1.9,.16,.16, matOscuro, -.60, 2.33, zp-.02);              // dintel metálico
+  caja(.1,.1,.14, matOscuro, -.60, 2.42, zp-.02);
+  caja(.16,.28,.06, new THREE.MeshLambertMaterial({color:0xb9bcbd}), .32, 1.20, zp-.03);
+  caja(.05,.05,.04, new THREE.MeshBasicMaterial({color:0xd94a35}), .32, 1.20, zp-.06);
   const luzAsc=new THREE.PointLight(0xcfd8e4,.9,7);
   luzAsc.position.set(-.6,2.1,SALA.z2-1.2); mundoPasillo.add(luzAsc);
   luces.push({luz:luzAsc, panel:null, prendida:true, t:rnd(3,12), mundo:"pasillo"});
+  plano(.9,.9, matPanel(), -.3, h-.03, cz+.6, Math.PI/2, 0);
 
-  // locker amarillo
+  // locker amarillo con candado (foto 3)
   const matAm=new THREE.MeshLambertMaterial({color:0xd6bb3a});
-  caja(.95,1.95,.5,matAm,1.5,.98,SALA.z2-.4);
-  caja(.03,1.95,.52,new THREE.MeshLambertMaterial({color:0x8d7c26}),1.5,.98,SALA.z2-.42);
-  caja(1.0,.12,.55,matOscuro,1.5,2.02,SALA.z2-.4);
+  caja(.92,1.9,.46, matAm, 1.55, .95, SALA.z2-.32);
+  caja(.03,1.9,.48, new THREE.MeshLambertMaterial({color:0x8d7c26}), 1.55, .95, SALA.z2-.34);
+  caja(.96,.12,.5, matOscuro, 1.55, 1.96, SALA.z2-.32);
+  caja(.1,.16,.05, matOscuro, 1.44, 1.02, SALA.z2-.56);          // manijas + candado
+  caja(.1,.16,.05, matOscuro, 1.66, 1.02, SALA.z2-.56);
+  caja(.07,.09,.04, matMetal, 1.55, 1.02, SALA.z2-.57);
+  caja(.3,.2,.02, matBlanco, 1.30, 1.55, SALA.z2-.56);           // etiqueta pegada
+
   // ventana con reja
-  plano(1.0,1.2,new THREE.MeshBasicMaterial({color:0x1b2430}),SALA.x2-.03,1.75,SALA.z1+2.6,0,-Math.PI/2);
-  for(let i=0;i<7;i++) caja(.05,1.25,.05,new THREE.MeshLambertMaterial({color:0xe6e2d8}),
-    SALA.x2-.12,1.75,SALA.z1+2.1+i*.16);
+  plano(1.0,1.2,new THREE.MeshBasicMaterial({color:0x111a24}),SALA.x2-.03,1.8,SALA.z1+2.6,0,-Math.PI/2);
+  for(let i=0;i<7;i++) caja(.05,1.25,.05, matBlanco, SALA.x2-.12,1.8,SALA.z1+2.1+i*.16);
+  caja(.1,1.34,.1, matBlanco, SALA.x2-.07,1.8,SALA.z1+2.02);
+  caja(.1,1.34,.1, matBlanco, SALA.x2-.07,1.8,SALA.z1+3.18);
 })();
 
 /* ==========================================================
@@ -796,8 +1016,8 @@ let entidades=[], vistaNena=false;
    6. JUGADOR, COLISIONES Y ESTADO
    ========================================================== */
 const jugador = {
-  pos:new THREE.Vector3(0,1.62,-1.5),
-  yaw:Math.PI, pitch:0,
+  pos:new THREE.Vector3(0,1.60,-.9),
+  yaw:0, pitch:0,
   vel:new THREE.Vector3(),
   bateria:100, luzOn:true, pasoT:0, bob:0
 };
@@ -805,14 +1025,16 @@ let modo="pasillo", jugando=false, cazado=false, tiempo=0, latidoT=0, risaT=rnd(
 
 // rectángulos transitables del pasillo
 const zonas = [
-  {x1:-ANCHO/2+.34, x2:ANCHO/2-.34, z1:Z_FONDO+.5, z2:Z_ATRAS-.3},   // pasillo
-  {x1:-.5, x2:.5, z1:Z_ATRAS-.4, z2:Z_ATRAS+.45},                     // vano
-  {x1:SALA.x1+.35, x2:SALA.x2-.35, z1:Z_ATRAS+.3, z2:SALA.z2-.55}     // sala ascensor
+  {x1:-MX+.42, x2:MX-.42, z1:Z_FONDO+.55, z2:Z_ATRAS-.35},            // pasillo
+  {x1:-.42, x2:.42, z1:Z_ATRAS-.45, z2:Z_ATRAS+.5},                   // vano angosto
+  {x1:SALA.x1+.35, x2:SALA.x2-.35, z1:Z_ATRAS+.35, z2:SALA.z2-.6}     // hall del ascensor
 ];
 // huecos de escalera: se ven, no se entran
 const bloqueos = [
-  {x1:-2.30, x2:-1.58, z1:-9.60, z2:-7.60},
-  {x1: 1.58, x2: 2.30, z1:-25.50, z2:-23.50}
+  {x1:-MX-.2, x2:-MX+.72, z1:-9.60, z2:-7.60},   // hueco de escalera izquierda
+  {x1: MX-.72, x2: MX+.2, z1:-25.50, z2:-23.50}, // hueco de escalera derecha
+  {x1: MX-.95, x2: MX+.2, z1:-4.30, z2:-2.70},   // metegol
+  {x1:-MX-.2, x2:-MX+.55, z1:-2.20, z2:-.50}     // tablero eléctrico
 ];
 function libreEnPasillo(x,z){
   for(const b of bloqueos) if(x>b.x1&&x<b.x2&&z>b.z1&&z<b.z2) return false;
@@ -969,7 +1191,7 @@ function reiniciar(){
   scene.fog=new THREE.FogExp2(0x090c11,.052);
   scene.background=new THREE.Color(0x090c11);
   ambiente.color.setHex(0x22303f); ambiente.intensity=.14;
-  jugador.pos.set(0,1.62,-1.5); jugador.yaw=Math.PI; jugador.pitch=0;
+  jugador.pos.set(0,1.60,-.9); jugador.yaw=0; jugador.pitch=0;
   jugador.bateria=100; jugador.luzOn=true;
   tiempo=0; risaT=rnd(6,12); vistaNena=false;
   Audio3.nivelDrone(.16);
@@ -1136,7 +1358,7 @@ function loop(){
       }
       // triggers
       if(jugador.pos.z < Z_FONDO+2.0) entrarBackrooms();
-      if(jugador.pos.z > SALA.z2-1.35 && jugador.pos.x < .5 && jugador.pos.x > -1.7) entrarBackrooms();
+      if(jugador.pos.z > SALA.z2-1.45 && jugador.pos.x < .35 && jugador.pos.x > -1.7) entrarBackrooms();
     }
 
     /* --- backrooms --- */
