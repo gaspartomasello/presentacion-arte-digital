@@ -13,7 +13,7 @@
     --sangre:#8b1a1a;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;overflow:hidden;background:#000;
+  html,body{height:100%;overflow:hidden;background:#000;cursor:default;
     font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--tiza)}
   canvas{display:block}
 
@@ -140,6 +140,17 @@
   <div class="nota">Te quedaste adentro después de hora. El pasillo del primer piso, algo
     que no debería existir debajo, y la planta baja con el portón cerrado con candado.
     Usá auriculares.</div>
+</div>
+
+<div class="pantalla oculta" id="pausa">
+  <div class="kicker">EN PAUSA</div>
+  <h1>RESPIRÁ<span>03:47 AM</span></h1>
+  <button id="seguir">CONTINUAR</button>
+  <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;justify-content:center">
+    <button id="pantallaCompleta" style="padding:10px 22px;font-size:11px">PANTALLA COMPLETA</button>
+    <button id="volverEmpezar" style="padding:10px 22px;font-size:11px">EMPEZAR DE NUEVO</button>
+  </div>
+  <div class="nota">ESC suelta el mouse y pausa. El cursor vuelve solo.</div>
 </div>
 
 <div class="pantalla oculta" id="fin">
@@ -1783,6 +1794,7 @@ function abrirAcertijo(){
   if(acertijoActivo||acertijoResuelto||acertijoFallado) return;
   acertijoActivo=true;
   document.exitPointerLock && document.exitPointerLock();
+  mostrarCursor();
   Audio3.campana();
   const ops=["+","−","×"], op=ops[Math.floor(Math.random()*3)];
   let a,b,r;
@@ -1929,14 +1941,52 @@ const teclas={};
 addEventListener("keydown",e=>{
   teclas[e.code]=true;
   if(e.code==="KeyF") alternarLinterna();
+  if(e.code==="KeyP" && !acertijoActivo){ if(jugando) pausar(); else if(!$("pausa").classList.contains("oculta")) reanudar(); }
   if(e.code==="KeyE" && jugando && !acertijoActivo) usarCercano();
   if(acertijoActivo && /^Digit[1-4]$/.test(e.code)) responder(+e.code.slice(5)-1);
   if(["KeyW","KeyA","KeyS","KeyD","Space"].includes(e.code)) e.preventDefault();
 });
 addEventListener("keyup",e=>teclas[e.code]=false);
 
+/* ---- pausa y cursor ----------------------------------------------------
+   Al soltar el pointer lock (ESC, F11, cambiar de pestaña) el juego se
+   pausa en vez de seguir corriendo, y se fuerza el repintado del cursor:
+   Chrome a veces lo deja escondido si se salió de pantalla completa
+   mientras el mouse estaba capturado.                                    */
+function mostrarCursor(){
+  document.body.style.cursor="none";
+  requestAnimationFrame(()=>{ document.body.style.cursor="default"; });
+}
+function pausar(){
+  if(!jugando || acertijoActivo) return;
+  jugando=false;
+  if(document.pointerLockElement) document.exitPointerLock && document.exitPointerLock();
+  mostrarCursor();
+  $("pausa").classList.remove("oculta");
+}
+function reanudar(){
+  $("pausa").classList.add("oculta");
+  jugando=true;
+  if(!esTactil){ try{ renderer.domElement.requestPointerLock(); }catch(e){} }
+}
+function pantallaCompleta(){
+  const d=document.documentElement;
+  if(!document.fullscreenElement){ (d.requestFullscreen||d.webkitRequestFullscreen||(()=>{})).call(d); }
+  else { (document.exitFullscreen||document.webkitExitFullscreen||(()=>{})).call(document); }
+}
+document.addEventListener("pointerlockchange",()=>{
+  if(document.pointerLockElement===renderer.domElement) return;
+  mostrarCursor();
+  if(jugando && !esTactil && !acertijoActivo) pausar();
+});
+document.addEventListener("fullscreenchange", mostrarCursor);
+addEventListener("blur", ()=>{ if(jugando) pausar(); });
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden && jugando) pausar(); });
+addEventListener("beforeunload", ()=>{ if(document.pointerLockElement) document.exitPointerLock(); });
+addEventListener("pagehide", ()=>{ if(document.pointerLockElement) document.exitPointerLock(); });
+
 renderer.domElement.addEventListener("click",()=>{
-  if(jugando && !esTactil) renderer.domElement.requestPointerLock();
+  if(jugando && !esTactil && !acertijoActivo) renderer.domElement.requestPointerLock();
 });
 addEventListener("mousemove",e=>{
   if(document.pointerLockElement!==renderer.domElement) return;
@@ -2024,6 +2074,7 @@ function morir(){
   cazado=true; jugando=false;
   Audio3.grito();
   document.exitPointerLock && document.exitPointerLock();
+  mostrarCursor();
   fundido(1);
   setTimeout(()=>{ $("fin").classList.remove("oculta"); },600);
 }
@@ -2051,6 +2102,7 @@ function salirDeLaEscuela(){
   jugando=false;
   document.exitPointerLock && document.exitPointerLock();
   Audio3.metal(); Audio3.puerta();
+  mostrarCursor();
   fundido(1);
   setTimeout(()=>{ $("ganaste").classList.remove("oculta"); },700);
 }
@@ -2060,6 +2112,7 @@ function reiniciar(){
   interactivos=[]; luzPlanta=false; tieneLlave=false;
   acertijoActivo=false; acertijoFallado=false; acertijoResuelto=false;
   clearTimeout(acertijoTO); $("acertijo").classList.add("oculta");
+  $("pausa").classList.add("oculta");
   jugador.stam=100; jugador.sinAire=false;
   objetivo("<b>Objetivo:</b> salí del pasillo.<br>Las puertas del fondo, o el ascensor");
   $("aguante").classList.remove("vacio");
@@ -2087,6 +2140,9 @@ $("jugar").onclick=()=>{
   if(!esTactil) renderer.domElement.requestPointerLock();
   susurrar("las puertas del fondo… o el ascensor", 5000);
 };
+$("seguir").onclick=reanudar;
+$("pantallaCompleta").onclick=()=>{ pantallaCompleta(); setTimeout(reanudar,120); };
+$("volverEmpezar").onclick=()=>{ $("pausa").classList.add("oculta"); reiniciar(); };
 $("reintentar").onclick=reiniciar;
 $("devuelta").onclick=reiniciar;
 
