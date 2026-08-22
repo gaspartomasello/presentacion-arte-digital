@@ -10,28 +10,45 @@ Todo en un solo archivo: `index.html`. Se abre en el navegador, sin build ni ser
 | Acción | Cómo |
 |---|---|
 | Colocar | Click izquierdo |
-| Paredes / pisos en línea o rectángulo | Click y arrastrar |
-| Rotar el objeto antes de colocarlo | `R` |
+| Paredes / pisos en línea o rectángulo | Click y arrastrar (la cinta amarilla muestra la medida) |
+| Seleccionar y mover lo ya colocado | Herramienta 🖐 Mover (`V`): click para seleccionar, arrastrar para mover |
+| Rotar | `R` (90°) · `Shift+R` (45°) — o los botones ↺ ↻ 45° del panel |
+| Deshacer / rehacer | `Ctrl+Z` / `Ctrl+Y` (también ↶ ↷ arriba) |
 | Mover la cámara | Arrastrar con el botón derecho, flechas o `WASD` |
 | Rotar la cámara 90° | `,` y `.` (o `Q` / `E`, o los botones de la brújula) |
 | Zoom | Rueda del mouse o `+` / `-` |
-| Demoler | `X` o `Supr` (también está la herramienta 💥) |
-| Cancelar la herramienta | `Esc` |
+| Demoler | `X` o `Supr` (también la herramienta 💥) |
+| Cuadrícula sí/no | `G` o el botón ▦ del panel Vista |
 | Cambiar de piso | `1` planta baja · `2` piso 1 |
 
 ## Qué se puede hacer
 
-- **Construir**: paredes sobre la cuadrícula, puertas y ventanas (dejan pasar el sol y proyectan
-  sombras reales), seis tipos de piso, escaleras que abren solas el hueco en la losa de arriba.
-- **Comprar**: asientos, mesas, cocina completa, baño (inodoro, bidet, lavamanos, ducha, bañera),
-  dormitorio (cama de 1 y 2 plazas, cama infantil, cuna, placard), electrodomésticos
-  (tele, computadora, equipo de música), lámparas y plantas.
-- **Dos pisos**, con vista de paredes altas / cortadas / bajas.
-- **Ciclo de día y noche** con reloj y velocidades: al anochecer las lámparas se encienden solas
-  (o se fuerzan con los botones Encendidas / Apagadas).
-- **Guardar y cargar** la casa en el navegador (`localStorage`).
+**Construir**
+- Paredes rectas y **en diagonal a 45°**, cercos de jardín, puertas y ventanas
+  (dejan pasar el sol y proyectan sombras reales).
+- **Pintura y empapelado por cara de pared**: 13 revestimientos (lisos, papel a rayas,
+  papel de flores, ladrillo visto, madera, azulejos). Cada lado del muro se pinta aparte.
+- Nueve solados, incluidos vereda y camino de piedra para el exterior.
+- Escaleras que abren solas el hueco en la losa de arriba.
+
+**Comprar**
+- Asientos, mesas, cocina completa, baño (inodoro, bidet, lavamanos, ducha, bañera),
+  dormitorio (cama de 1 y 2 plazas, cama infantil, cuna, placard), electrodomésticos,
+  lámparas y plantas de interior.
+- **Exterior**: árboles, pinos, arbustos, tulipanes, canteros de flores, buzón, farol de
+  jardín, reposera, parrilla, banco, mesa con sombrilla y pileta.
+
+**Vista**
+- Dos plantas, con paredes **Altas / Auto / Cortadas / Bajas**. En modo **Auto** bajan solas
+  las paredes que taparían la habitación desde el ángulo actual de la cámara, como en el Sims.
+- Sombras de contacto bajo los muebles (se pueden apagar).
+- Contorno de resaltado al pasar el mouse, para saber qué vas a mover o demoler.
+- Ciclo de día y noche con reloj y velocidades: al anochecer las lámparas se encienden solas.
+
+**Guardar**: la casa se guarda en el navegador (`localStorage`) y se puede volver a cargar.
 
 Algunos objetos se apoyan sobre otros (el microondas sobre la mesada, la lámpara sobre la mesa de
 luz, la planta chica sobre una mesa) y otros se cuelgan de la pared o del techo.
 
-Desde la consola del navegador hay un hook para trastear: `casaSim.setTime(22*60)`, `casaSim.state`, etc.
+Desde la consola del navegador hay un hook para trastear: `casaSim.setTime(22*60)`,
+`casaSim.state`, `casaSim.undo()`, etc.
