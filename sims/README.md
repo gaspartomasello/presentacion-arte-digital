@@ -13,8 +13,9 @@ Todo en un solo archivo: `index.html`. Se abre en el navegador, sin build ni ser
 | Paredes / pisos en línea o rectángulo | Click y arrastrar (la cinta amarilla muestra la medida) |
 | Seleccionar y mover lo ya colocado | Herramienta 🖐 Mover (`V`): click para seleccionar, arrastrar para mover |
 | Rotar | `R` (90°) · `Shift+R` (45°) — o los botones ↺ ↻ 45° del panel |
+| Pintar / llenar un ambiente entero | `Shift` + click con la brocha o con un solado |
 | Deshacer / rehacer | `Ctrl+Z` / `Ctrl+Y` (también ↶ ↷ arriba) |
-| Mover la cámara | Arrastrar con el botón derecho, flechas o `WASD` |
+| Mover la cámara | Arrastrar con el botón derecho, flechas o `WASD`, o llevar el cursor al borde de la pantalla |
 | Rotar la cámara 90° | `,` y `.` (o `Q` / `E`, o los botones de la brújula) |
 | Zoom | Rueda del mouse o `+` / `-` |
 | Demoler | `X` o `Supr` (también la herramienta 💥) |
@@ -24,11 +25,15 @@ Todo en un solo archivo: `index.html`. Se abre en el navegador, sin build ni ser
 ## Qué se puede hacer
 
 **Construir**
-- Paredes rectas y **en diagonal a 45°**, cercos de jardín, puertas y ventanas
-  (dejan pasar el sol y proyectan sombras reales).
-- **Pintura y empapelado por cara de pared**: 13 revestimientos (lisos, papel a rayas,
-  papel de flores, ladrillo visto, madera, azulejos). Cada lado del muro se pinta aparte.
-- Nueve solados, incluidos vereda y camino de piedra para el exterior.
+- Paredes rectas y **en diagonal a 45°**, cercos de jardín y cuatro aberturas: puerta,
+  ventana, **ojo de buey** (redonda, con el agujero calado de verdad) y **puerta ventana**
+  de dos hojas vidriadas. Todas dejan pasar el sol y proyectan sombras reales.
+- **Pintura y empapelado por cara de pared**: 21 revestimientos — lisos, papel a rayas,
+  de flores, de **nubes** (tipo cuarto de Woody), de estrellas, ladrillo visto, madera y
+  azulejos. Cada lado del muro se pinta aparte, y con **Shift** se pinta el ambiente entero:
+  por dentro el cuarto completo, por fuera la vuelta entera de la casa.
+- Nueve solados con textura propia (se ve el damero, las vetas de la madera, las juntas de
+  la vereda y las piedras del camino). Con **Shift** se llena de una un ambiente cerrado.
 - Escaleras que abren solas el hueco en la losa de arriba.
 
 **Comprar**

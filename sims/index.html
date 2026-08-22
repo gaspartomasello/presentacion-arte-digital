@@ -239,7 +239,8 @@
     </div>
     <div class="keys">
       <b>Click</b> colocar · <b>R</b> rotar · <b>Shift+R</b> 45°<br>
-      <b>Botón der.</b> arrastrar = mover cámara<br>
+      <b>Shift+click</b> pintar el ambiente entero<br>
+      <b>WASD</b> o flechas · el cursor en el borde también mueve<br>
       <b>, .</b> rotar cámara · <b>Rueda</b> zoom<br>
       <b>Ctrl+Z / Ctrl+Y</b> deshacer / rehacer<br>
       <b>V</b> seleccionar y mover · <b>X</b> demoler<br>
@@ -275,6 +276,8 @@ const CENTER   = new THREE.Vector3(N/2, 0, N/2);
 
 const DOOR_W = 0.80, DOOR_H = 2.05;
 const WIN_W  = 0.90, WIN_Y0 = 0.95, WIN_Y1 = 1.95;
+const ROUND_R = 0.42, ROUND_CY = 1.52;          // ojo de buey
+const PV_W = 0.94, PV_H = 2.35;                 // puerta ventana
 
 // ---------- Renderer / escena ----------
 const app = document.getElementById('app');
@@ -402,6 +405,9 @@ function texFrom(canvas, rx, ry){
   return t;
 }
 
+// ruido determinista: las texturas salen siempre iguales
+function rnd(seed){ let x = seed>>>0; return ()=> (x = (x*1664525 + 1013904223)>>>0) / 4294967296; }
+
 const patRayas = cnv(64, (g,s)=>{
   g.fillStyle = '#f3ead6'; g.fillRect(0,0,s,s);
   g.fillStyle = '#cfdcc4';
@@ -455,21 +461,63 @@ const patSombrilla = cnv(128, (g,s)=>{
 });
 const sombrillaMat = new THREE.MeshLambertMaterial({ map: texFrom(patSombrilla, 1, 1), side: THREE.DoubleSide });
 
+const patNubes = cnv(128, (g,s)=>{
+  g.fillStyle = '#79bdec'; g.fillRect(0,0,s,s);
+  const nube = (cx,cy,r)=>{
+    for (let ox=-1; ox<=1; ox++) for (let oy=-1; oy<=1; oy++){
+      const x = cx+ox*s, y = cy+oy*s;
+      g.fillStyle = '#edf6fd';
+      g.beginPath();
+      g.arc(x, y+r*0.22, r*0.82, 0, 7); g.arc(x-r*0.90, y+r*0.38, r*0.60, 0, 7);
+      g.arc(x+r*0.94, y+r*0.40, r*0.64, 0, 7); g.fill();
+      g.fillStyle = '#ffffff';
+      g.beginPath();
+      g.arc(x, y, r*0.74, 0, 7); g.arc(x-r*0.82, y+r*0.30, r*0.52, 0, 7);
+      g.arc(x+r*0.86, y+r*0.32, r*0.56, 0, 7); g.arc(x+r*0.28, y-r*0.42, r*0.46, 0, 7);
+      g.fill();
+    }
+  };
+  nube(34,34,25); nube(96,86,28); nube(68,120,18); nube(116,16,16); nube(6,96,15);
+});
+const patEstrellas = cnv(128, (g,s)=>{
+  g.fillStyle = '#2c3c73'; g.fillRect(0,0,s,s);
+  const r = rnd(7);
+  const estrella = (cx,cy,rad)=>{
+    g.fillStyle = '#f6d75e'; g.beginPath();
+    for (let i=0;i<10;i++){
+      const a = -Math.PI/2 + i*Math.PI/5, rr = i%2 ? rad*0.42 : rad;
+      g[i?'lineTo':'moveTo'](cx+Math.cos(a)*rr, cy+Math.sin(a)*rr);
+    }
+    g.closePath(); g.fill();
+  };
+  for (const [x,y,rad] of [[26,28,9],[88,52,11],[54,96,8],[112,110,7],[16,104,6]]) estrella(x,y,rad);
+  g.fillStyle = 'rgba(255,255,255,.75)';
+  for (let i=0;i<40;i++){ const x=r()*s, y=r()*s; g.beginPath(); g.arc(x,y,r()*1.3+0.5,0,7); g.fill(); }
+});
+
 // Revestimientos de pared (lisos y empapelados)
 const WALL_FINISHES = [
-  { id:'crema',     name:'Crema',      color:0xf0e6d2 },
-  { id:'blanco',    name:'Blanco',     color:0xf8f7f2 },
-  { id:'celeste',   name:'Celeste',    color:0xbcd8ea },
-  { id:'menta',     name:'Verde agua', color:0xb9d8c4 },
-  { id:'rosa',      name:'Rosa viejo', color:0xf0cfd0 },
-  { id:'amarillo',  name:'Amarillo',   color:0xf2e0a8 },
-  { id:'terracota', name:'Terracota',  color:0xc98b6b },
-  { id:'gris',      name:'Gris piedra',color:0xcdd3d8 },
-  { id:'rayas',     name:'Papel rayas',canvas:patRayas,   rep:[2,4] },
-  { id:'flores',    name:'Papel flores',canvas:patFlores, rep:[2,4] },
-  { id:'ladrillo',  name:'Ladrillo',   canvas:patLadrillo,rep:[1.6,3.4] },
-  { id:'boiserie',  name:'Madera',     canvas:patMadera,  rep:[1,3] },
-  { id:'azulejo',   name:'Azulejo',    canvas:patAzulejo, rep:[2.4,5] },
+  { id:'crema',     name:'Crema',       color:0xf0e6d2 },
+  { id:'blanco',    name:'Blanco',      color:0xf8f7f2 },
+  { id:'arena',     name:'Arena',       color:0xe7d6b6 },
+  { id:'celeste',   name:'Celeste',     color:0xbcd8ea },
+  { id:'azul',      name:'Azul francia',color:0x7fa2cf },
+  { id:'menta',     name:'Verde agua',  color:0xb9d8c4 },
+  { id:'oliva',     name:'Verde oliva', color:0xb2bb86 },
+  { id:'rosa',      name:'Rosa viejo',  color:0xf0cfd0 },
+  { id:'coral',     name:'Coral',       color:0xf0a98d },
+  { id:'lavanda',   name:'Lavanda',     color:0xd6c9e8 },
+  { id:'amarillo',  name:'Amarillo',    color:0xf2e0a8 },
+  { id:'terracota', name:'Terracota',   color:0xc98b6b },
+  { id:'gris',      name:'Gris piedra', color:0xcdd3d8 },
+  { id:'carbon',    name:'Gris carbón', color:0x77807f },
+  { id:'nubes',     name:'Nubes',       canvas:patNubes,    rep:[0.85,2.25] },
+  { id:'estrellas', name:'Estrellas',   canvas:patEstrellas,rep:[1,2.65] },
+  { id:'rayas',     name:'Papel rayas', canvas:patRayas,    rep:[2,4] },
+  { id:'flores',    name:'Papel flores',canvas:patFlores,   rep:[2,4] },
+  { id:'ladrillo',  name:'Ladrillo',    canvas:patLadrillo, rep:[1.6,3.4] },
+  { id:'boiserie',  name:'Madera',      canvas:patMadera,   rep:[1,3] },
+  { id:'azulejo',   name:'Azulejo',     canvas:patAzulejo,  rep:[2.4,5] },
 ];
 const finishMat = {}, finishCSS = {};
 for (const f of WALL_FINISHES){
@@ -483,20 +531,123 @@ for (const f of WALL_FINISHES){
 }
 const DEFAULT_FINISH = 'crema';
 
-// Solados
+// Solados: cada uno con su textura, para que se vean las juntas y el damero
+const patPisoMadera = cnv(128, (g,s)=>{
+  const r = rnd(11);
+  g.fillStyle = '#a9743f'; g.fillRect(0,0,s,s);
+  for (let row=0; row<4; row++){
+    const y = row*32;
+    g.fillStyle = ['#b07d47','#a06c3a','#b98a52','#9a6636'][row];
+    g.fillRect(0,y,s,31);
+    g.strokeStyle = 'rgba(70,40,15,.55)'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(0,y+31.5); g.lineTo(s,y+31.5); g.stroke();
+    g.strokeStyle = 'rgba(70,40,15,.22)'; g.lineWidth=1;
+    for (let i=0;i<5;i++){ const yy=y+4+r()*24; g.beginPath(); g.moveTo(0,yy); g.lineTo(s,yy); g.stroke(); }
+    const jx = 24 + row*30;
+    g.strokeStyle = 'rgba(60,34,12,.6)'; g.lineWidth=2;
+    g.beginPath(); g.moveTo(jx,y); g.lineTo(jx,y+31); g.stroke();
+  }
+});
+const patPisoParquet = cnv(128, (g,s)=>{
+  g.fillStyle = '#8c5a2e'; g.fillRect(0,0,s,s);
+  for (let by=0; by<4; by++) for (let bx=0; bx<4; bx++){
+    const x=bx*32, y=by*32, horiz = (bx+by)%2===0;
+    g.fillStyle = horiz ? '#a06a38' : '#8a5730';
+    g.fillRect(x,y,32,32);
+    g.strokeStyle = 'rgba(55,30,10,.45)'; g.lineWidth=1.5;
+    for (let i=1;i<4;i++){
+      g.beginPath();
+      if (horiz){ g.moveTo(x, y+i*8); g.lineTo(x+32, y+i*8); }
+      else      { g.moveTo(x+i*8, y); g.lineTo(x+i*8, y+32); }
+      g.stroke();
+    }
+    g.strokeStyle = 'rgba(40,22,8,.55)'; g.lineWidth=2; g.strokeRect(x+1,y+1,30,30);
+  }
+});
+const patPisoCeramic = cnv(128, (g,s)=>{
+  const r = rnd(23);
+  g.fillStyle = '#c3ced4'; g.fillRect(0,0,s,s);
+  g.fillStyle = '#e9eff2'; g.fillRect(3,3,s-6,s-6);
+  g.fillStyle = 'rgba(150,170,180,.30)';
+  for (let i=0;i<90;i++){ g.beginPath(); g.arc(r()*s, r()*s, r()*1.6+0.4, 0, 7); g.fill(); }
+});
+const patPisoAjedrez = cnv(128, (g,s)=>{
+  g.fillStyle = '#f1efe8'; g.fillRect(0,0,s,s);
+  g.fillStyle = '#2d333a'; g.fillRect(0,0,64,64); g.fillRect(64,64,64,64);
+  g.strokeStyle = 'rgba(120,120,120,.35)'; g.lineWidth=1;
+  g.strokeRect(0.5,0.5,127,127); g.beginPath(); g.moveTo(64,0); g.lineTo(64,128); g.moveTo(0,64); g.lineTo(128,64); g.stroke();
+});
+const patPisoAlfombra = cnv(128, (g,s)=>{
+  const r = rnd(41);
+  g.fillStyle = '#9c6f8c'; g.fillRect(0,0,s,s);
+  for (let i=0;i<1500;i++){
+    const x=r()*s, y=r()*s;
+    g.fillStyle = r()>0.5 ? 'rgba(255,255,255,.10)' : 'rgba(60,30,55,.14)';
+    g.fillRect(x,y,2,2);
+  }
+});
+const patPisoTerraza = cnv(128, (g,s)=>{
+  const r = rnd(53);
+  g.fillStyle = '#e2d8c6'; g.fillRect(0,0,s,s);
+  for (let by=0; by<2; by++) for (let bx=0; bx<2; bx++){
+    g.fillStyle = ['#c9764f','#c07047','#d08155','#bb6c45'][by*2+bx];
+    g.fillRect(bx*64+3, by*64+3, 58, 58);
+  }
+  g.fillStyle = 'rgba(120,60,30,.16)';
+  for (let i=0;i<120;i++){ g.beginPath(); g.arc(r()*s, r()*s, r()*2+0.4, 0, 7); g.fill(); }
+});
+const patPisoVereda = cnv(128, (g,s)=>{
+  const r = rnd(67);
+  g.fillStyle = '#9d9d95'; g.fillRect(0,0,s,s);
+  for (let by=0; by<2; by++) for (let bx=0; bx<2; bx++){
+    g.fillStyle = ['#bcbcb3','#b5b5ac','#c2c2b9','#b9b9b0'][by*2+bx];
+    g.fillRect(bx*64+2, by*64+2, 60, 60);
+  }
+  g.fillStyle = 'rgba(90,90,85,.30)';
+  for (let i=0;i<200;i++){ g.beginPath(); g.arc(r()*s, r()*s, r()*1.5+0.3, 0, 7); g.fill(); }
+});
+const patPisoCamino = cnv(128, (g,s)=>{
+  const r = rnd(83);
+  g.fillStyle = '#6a665e'; g.fillRect(0,0,s,s);
+  const piedra = (cx,cy,rad)=>{
+    for (let ox=-1; ox<=1; ox++) for (let oy=-1; oy<=1; oy++){
+      g.fillStyle = ['#a9a396','#9b968a','#b5b0a3','#928d82'][Math.floor(r()*4)];
+      g.beginPath();
+      for (let i=0;i<7;i++){
+        const a=i*Math.PI*2/7, rr=rad*(0.75+r()*0.35);
+        g[i?'lineTo':'moveTo'](cx+ox*s+Math.cos(a)*rr, cy+oy*s+Math.sin(a)*rr);
+      }
+      g.closePath(); g.fill();
+    }
+  };
+  for (const [x,y,rad] of [[26,24,20],[80,26,22],[24,74,21],[78,80,20],[120,52,17],[52,120,17]]) piedra(x,y,rad);
+});
+const patPisoCesped = cnv(128, (g,s)=>{
+  const r = rnd(97);
+  g.fillStyle = '#6ea345'; g.fillRect(0,0,s,s);
+  for (let i=0;i<900;i++){
+    const x=r()*s, y=r()*s, h=2+r()*4;
+    g.strokeStyle = ['rgba(120,180,80,.55)','rgba(60,120,45,.5)','rgba(150,200,95,.4)'][Math.floor(r()*3)];
+    g.lineWidth = 1; g.beginPath(); g.moveTo(x,y); g.lineTo(x+(r()-0.5)*2, y-h); g.stroke();
+  }
+});
+
 const FLOOR_DEFS = [
-  { id:'madera',  name:'Madera',    color:0xb07a45 },
-  { id:'parquet', name:'Parquet',   color:0x8c5a2e },
-  { id:'ceramic', name:'Cerámica',  color:0xdfe6ea },
-  { id:'ajedrez', name:'Damero',    color:0x39424c },
-  { id:'alfomb',  name:'Alfombra',  color:0x9c6f8c },
-  { id:'terraza', name:'Terraza',   color:0xc9a583 },
-  { id:'vereda',  name:'Vereda',    color:0xb9b9b0 },
-  { id:'camino',  name:'Camino piedra', color:0x8e8a80 },
-  { id:'cesped',  name:'Césped',    color:0x74a84f },
+  { id:'madera',  name:'Madera',        canvas:patPisoMadera },
+  { id:'parquet', name:'Parquet',       canvas:patPisoParquet },
+  { id:'ceramic', name:'Cerámica',      canvas:patPisoCeramic },
+  { id:'ajedrez', name:'Damero',        canvas:patPisoAjedrez },
+  { id:'alfomb',  name:'Alfombra',      canvas:patPisoAlfombra },
+  { id:'terraza', name:'Terraza',       canvas:patPisoTerraza },
+  { id:'vereda',  name:'Vereda',        canvas:patPisoVereda },
+  { id:'camino',  name:'Camino piedra', canvas:patPisoCamino },
+  { id:'cesped',  name:'Césped',        canvas:patPisoCesped },
 ];
-const FLOOR_MATS = {};
-for (const f of FLOOR_DEFS) FLOOR_MATS[f.id] = new THREE.MeshLambertMaterial({ color:f.color });
+const FLOOR_MATS = {}, floorCSS = {};
+for (const f of FLOOR_DEFS){
+  FLOOR_MATS[f.id] = new THREE.MeshLambertMaterial({ map: texFrom(f.canvas, 1, 1) });
+  floorCSS[f.id] = `url(${f.canvas.toDataURL()}) center/34px 34px`;
+}
 
 // ---------- Materiales compartidos ----------
 const M = {
@@ -504,6 +655,7 @@ const M = {
   wallTop  : new THREE.MeshLambertMaterial({ color:0xb9a988 }),
   slab     : new THREE.MeshLambertMaterial({ color:0xcfae86 }),
   glass    : new THREE.MeshLambertMaterial({ color:0xbfe4ff, transparent:true, opacity:0.28 }),
+  glass2   : new THREE.MeshLambertMaterial({ color:0xbfe4ff, transparent:true, opacity:0.28, side:THREE.DoubleSide }),
   frame    : new THREE.MeshLambertMaterial({ color:0xffffff }),
   wood     : new THREE.MeshLambertMaterial({ color:0x9c6b3f }),
   woodD    : new THREE.MeshLambertMaterial({ color:0x6f4826 }),
@@ -664,6 +816,27 @@ function buildFenceMesh(len, ghost){
   return g;
 }
 
+const roundGeoCache = new Map();
+function roundPanelGeo(len, depth){
+  const k = len.toFixed(3)+'_'+depth.toFixed(3);
+  let g = roundGeoCache.get(k);
+  if (!g){
+    const sh = new THREE.Shape();
+    sh.moveTo(-len/2, 0); sh.lineTo(len/2, 0); sh.lineTo(len/2, WALL_H); sh.lineTo(-len/2, WALL_H); sh.closePath();
+    const hole = new THREE.Path();
+    hole.absarc(0, ROUND_CY, ROUND_R, 0, Math.PI*2, true);
+    sh.holes.push(hole);
+    g = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled:false, curveSegments:26 });
+    roundGeoCache.set(k, g); sharedGeos.add(g);
+  }
+  return g;
+}
+function roundPanel(len, mat, z){
+  const m = new THREE.Mesh(roundPanelGeo(len, WALL_T/2), mat);
+  m.position.z = z; m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+
 function buildWallMesh(w, len, ghost){
   if (w.kind === 'fence') return buildFenceMesh(len, ghost);
   const g = new THREE.Group();
@@ -701,6 +874,46 @@ function buildWallMesh(w, len, ghost){
       g.add(box(0.05, h, WALL_T+0.07, M.frame, -(WIN_W/2+0.02), WIN_Y0, 0));
       g.add(box(0.05, h, WALL_T+0.07, M.frame,  (WIN_W/2+0.02), WIN_Y0, 0));
       g.add(box(0.045, h, 0.05, M.frame, 0, WIN_Y0, 0));
+    }
+  } else if (w.op === 'round'){
+    // ojo de buey: dos medias hojas extruidas con el agujero real
+    const ma = ghost ? ghostMat : (finishMat[w.a] || finishMat[DEFAULT_FINISH]);
+    const mb = ghost ? ghostMat : (finishMat[w.b] || finishMat[DEFAULT_FINISH]);
+    g.add(roundPanel(len, ma, -WALL_T/2));
+    g.add(roundPanel(len, mb, 0));
+    if (!ghost){
+      const aro = new THREE.Mesh(new THREE.TorusGeometry(ROUND_R, 0.055, 8, 26), M.frame);
+      aro.position.set(0, ROUND_CY, 0); aro.castShadow = true; g.add(aro);
+      const vidrio = new THREE.Mesh(new THREE.CircleGeometry(ROUND_R, 26), M.glass2);
+      vidrio.position.set(0, ROUND_CY, 0); g.add(vidrio);
+      g.add(box(ROUND_R*2-0.04, 0.045, 0.05, M.frame, 0, ROUND_CY-0.022, 0));
+      g.add(box(0.045, ROUND_R*2-0.04, 0.05, M.frame, 0, ROUND_CY-ROUND_R+0.02, 0));
+    }
+  } else if (w.op === 'french'){
+    // puerta ventana: dos hojas vidriadas del piso al dintel
+    const sp = (len - PV_W)/2;
+    g.add(mk(sp, WALL_H, WALL_T, -(len-sp)/2, 0, 0));
+    g.add(mk(sp, WALL_H, WALL_T,  (len-sp)/2, 0, 0));
+    g.add(mk(PV_W, WALL_H-PV_H, WALL_T, 0, PV_H, 0));
+    if (!ghost){
+      g.add(box(PV_W+0.09, 0.08, WALL_T+0.07, M.frame, 0, PV_H-0.04, 0));
+      g.add(box(0.06, PV_H, WALL_T+0.07, M.frame, -(PV_W/2+0.025), 0, 0));
+      g.add(box(0.06, PV_H, WALL_T+0.07, M.frame,  (PV_W/2+0.025), 0, 0));
+      const lw = PV_W/2 - 0.02;
+      for (const sgn of [-1, 1]){
+        const hoja = new THREE.Group();
+        const vid = box(lw-0.09, PV_H-0.22, 0.025, M.glass, 0, 0.11, 0);
+        vid.castShadow = false; hoja.add(vid);
+        hoja.add(box(lw, 0.055, 0.06, M.frame, 0, 0.05, 0));
+        hoja.add(box(lw, 0.055, 0.06, M.frame, 0, PV_H-0.13, 0));
+        hoja.add(box(0.05, PV_H-0.10, 0.06, M.frame, -(lw/2-0.025), 0.05, 0));
+        hoja.add(box(0.05, PV_H-0.10, 0.06, M.frame,  (lw/2-0.025), 0.05, 0));
+        for (const y of [0.78, 1.52]) hoja.add(box(lw-0.06, 0.04, 0.05, M.frame, 0, y, 0));
+        hoja.add(box(0.04, PV_H-0.22, 0.05, M.frame, 0, 0.11, 0));
+        hoja.add(cyl(0.028, 0.16, M.metal, sgn*(lw/2-0.10), 1.02, 0.05, 8));
+        hoja.position.set(sgn*(PV_W/4), 0, 0);
+        g.add(hoja);
+      }
     }
   } else {
     g.add(mk(len, WALL_H, WALL_T, 0, 0, 0));
@@ -786,13 +999,70 @@ function wallAllowed(L, key){
   return state.floors[L].has(tk(s.a.x,s.a.z)) || state.floors[L].has(tk(s.b.x,s.b.z));
 }
 
+// Baldosa que mira una cara de pared
+function faceTile(key, side){
+  const w = wallSides(key);
+  return side > 0 ? w.b : w.a;
+}
+// Ambiente: baldosas alcanzables sin cruzar paredes (los cercos no dividen)
+function blocksRoom(L, key){
+  const w = state.walls[L].get(key);
+  return !!w && w.kind !== 'fence';
+}
+function roomTiles(L, sx, sz){
+  if (sx<0 || sz<0 || sx>=N || sz>=N) return [];
+  const seen = new Set([tk(sx,sz)]), stack = [[sx,sz]], out = [];
+  while (stack.length && out.length < N*N){
+    const [x,z] = stack.pop();
+    out.push({x,z});
+    const vecinos = [
+      [x,   z-1, wallKey('H',x,z)],
+      [x,   z+1, wallKey('H',x,z+1)],
+      [x-1, z,   wallKey('V',x,z)],
+      [x+1, z,   wallKey('V',x+1,z)],
+    ];
+    for (const [nx,nz,k] of vecinos){
+      if (nx<0 || nz<0 || nx>=N || nz>=N) continue;
+      if (blocksRoom(L,k)) continue;
+      const key = tk(nx,nz);
+      if (seen.has(key)) continue;
+      seen.add(key); stack.push([nx,nz]);
+    }
+  }
+  return out;
+}
+// Pinta todas las caras de pared que dan a un ambiente
+function paintRoomFaces(L, tile, finish){
+  const region = roomTiles(L, tile.x, tile.z);
+  let n = 0;
+  for (const t of region){
+    const caras = [
+      [wallKey('H',t.x,t.z),   'b'],
+      [wallKey('H',t.x,t.z+1), 'a'],
+      [wallKey('V',t.x,t.z),   'b'],
+      [wallKey('V',t.x+1,t.z), 'a'],
+      [wallKey('D',t.x,t.z), 'ambas'],
+      [wallKey('A',t.x,t.z), 'ambas'],
+    ];
+    for (const [k,cara] of caras){
+      const w = state.walls[L].get(k);
+      if (!w || w.kind === 'fence') continue;
+      if (cara === 'ambas'){ w.a = finish; w.b = finish; }
+      else if (w[cara] !== finish) w[cara] = finish;
+      else continue;
+      n++;
+    }
+  }
+  return n;
+}
+
 function rebuildFloors(L){
   const grp = floorGroup[L];
   grp.clear();
   for (const [k, matName] of state.floors[L]){
     const [x,z] = k.split(',').map(Number);
     if (stairHoleAt(L,x,z)) continue;
-    const mat = (matName==='ajedrez' && (x+z)%2===0) ? FLOOR_MATS.ceramic : (FLOOR_MATS[matName]||FLOOR_MATS.madera);
+    const mat = FLOOR_MATS[matName] || FLOOR_MATS.madera;
     const m = box(TILE, SLAB, TILE, mat, x+0.5, -SLAB, z+0.5);
     m.castShadow = false;
     grp.add(m);
@@ -1535,11 +1805,34 @@ function panBy(dx, dy){
   const h = ZOOMS[zoomIdx], k = (2*h)/innerHeight, y = camYaw();
   const right = new THREE.Vector3(Math.cos(y), 0, -Math.sin(y));
   const fwd   = new THREE.Vector3(-Math.sin(y), 0, -Math.cos(y));
-  camTarget.addScaledVector(right, -dx*k).addScaledVector(fwd, -dy*k);
+  // en vertical el plano del piso se ve escorzado: se compensa para que siga al cursor 1:1
+  camTarget.addScaledVector(right, -dx*k).addScaledVector(fwd, dy*k/Math.sin(ELEV));
   camTarget.x = THREE.MathUtils.clamp(camTarget.x, -8, N+8);
   camTarget.z = THREE.MathUtils.clamp(camTarget.z, -8, N+8);
   applyCamera();
 }
+// Desplazamiento por borde de pantalla, a velocidad tranquila
+const EDGE_PX = 30, EDGE_SPEED = 330;
+let edgeVX = 0, edgeVY = 0, lastPointerEv = null;
+const elBottomBar = document.getElementById('bottom');
+function updateEdgePan(e){
+  if (!e || panning){ edgeVX = edgeVY = 0; return; }
+  if (e.target && e.target.closest && e.target.closest('#bottom,#topbar,#compass,#hint')){
+    edgeVX = edgeVY = 0; return;
+  }
+  const yMax = elBottomBar.getBoundingClientRect().top;
+  edgeVX = e.clientX < EDGE_PX ? 1 : (e.clientX > innerWidth - EDGE_PX ? -1 : 0);
+  edgeVY = e.clientY < EDGE_PX ? 1 : ((e.clientY > yMax - EDGE_PX && e.clientY < yMax) ? -1 : 0);
+}
+addEventListener('pointermove', e=>{ lastPointerEv = e; updateEdgePan(e); });
+addEventListener('pointerleave', ()=>{ edgeVX = edgeVY = 0; });
+addEventListener('blur', ()=>{ edgeVX = edgeVY = 0; });
+function stepEdgePan(dt){
+  if (!edgeVX && !edgeVY) return;
+  panBy(edgeVX*EDGE_SPEED*dt, edgeVY*EDGE_SPEED*dt);
+  if (lastPointerEv && !dragObj){ updateHover(lastPointerEv); refreshGhost(); }
+}
+
 function rotateCam(d){
   camRot = (camRot + d + 4) % 4;
   applyCamera(); applyWallMode(); invalidateGhost(); refreshGhost(); refreshSelection();
@@ -1714,11 +2007,11 @@ function refreshGhost(){
     }
     showMeasure(keys.length + (keys.length===1 ? ' baldosa' : ' baldosas'));
   }
-  else if (tool.kind === 'door' || tool.kind === 'window'){
+  else if (tool.kind === 'opening'){
     const k = hover.wall.key, t = wallTransform(k);
     const w = state.walls[L].get(k);
     const ok = !!w && w.kind !== 'fence';
-    const m = buildWallMesh({ op:tool.kind, kind:'wall' }, t.len, true);
+    const m = buildWallMesh({ op:tool.op, kind:'wall' }, t.len, true);
     m.traverse(q=>{ if(q.isMesh) q.material = ok ? ghostMat : ghostBadMat; });
     m.position.set(t.x,0,t.z); m.rotation.y = t.rotY;
     m.scale.y = wallFactor(L,k) || 1;
@@ -1842,13 +2135,25 @@ function placeOpening(kind){
   if (w.kind === 'fence'){ toast('Los cercos no llevan aberturas'); return; }
   w.op = kind; rebuildWalls(L);
 }
-function paintWall(){
+function paintWall(shift){
   const L = currentLevel, k = hover.wall.key;
   const w = state.walls[L].get(k);
+  if (shift){
+    // con Shift vale hacer click en una cara o directamente en el piso del ambiente
+    const t = w ? faceTile(k, hover.wall.side) : { x:hover.tx, z:hover.tz };
+    const n = paintRoomFaces(L, t, tool.finish);
+    if (n){ rebuildWalls(L); toast(`Pintadas ${n} caras del ambiente`); return; }
+    toast('No encontré paredes alrededor'); return;
+  }
   if (!w){ toast('No hay pared para pintar'); return; }
   if (w.kind === 'fence'){ toast('Los cercos no se pintan'); return; }
   if (hover.wall.side > 0) w.b = tool.finish; else w.a = tool.finish;
   rebuildWalls(L);
+}
+function roomFloorTiles(L){
+  const region = roomTiles(L, hover.tx, hover.tz);
+  if (region.length > 400){ toast('Ese ambiente no está cerrado'); return null; }
+  return region;
 }
 function placeFloors(tiles){
   const L = currentLevel; let n=0;
@@ -1998,10 +2303,14 @@ dom.addEventListener('pointerup', e=>{
   if (tool && hover){
     switch (tool.kind){
       case 'wall':   placeWalls(currentWallKeys()); break;
-      case 'floor':  placeFloors(tileRect(dragStart || {x:hover.tx,z:hover.tz}, {x:hover.tx,z:hover.tz})); break;
-      case 'door':
-      case 'window': placeOpening(tool.kind); break;
-      case 'paint':  paintWall(); break;
+      case 'floor': {
+        const rect = tileRect(dragStart || {x:hover.tx,z:hover.tz}, {x:hover.tx,z:hover.tz});
+        const relleno = (e.shiftKey && rect.length === 1) ? roomFloorTiles(currentLevel) : rect;
+        if (relleno) placeFloors(relleno);
+        break;
+      }
+      case 'opening': placeOpening(tool.op); break;
+      case 'paint':  paintWall(e.shiftKey); break;
       case 'object': commitObject(); break;
       case 'delete': deleteAt(); break;
     }
@@ -2037,10 +2346,10 @@ addEventListener('keydown', e=>{
   else if (k === '2') setLevel(1);
   else if (k === '+' || k === '=') zoomCam(1);
   else if (k === '-') zoomCam(-1);
-  else if (['arrowleft','a'].includes(k)) panBy(-40,0);
-  else if (['arrowright','d'].includes(k)) panBy(40,0);
-  else if (['arrowup','w'].includes(k)) panBy(0,-40);
-  else if (['arrowdown','s'].includes(k)) panBy(0,40);
+  else if (['arrowleft','a'].includes(k))  panBy( 44, 0);
+  else if (['arrowright','d'].includes(k)) panBy(-44, 0);
+  else if (['arrowup','w'].includes(k))    panBy(0,  44);
+  else if (['arrowdown','s'].includes(k))  panBy(0, -44);
 });
 
 // =========================================================================
@@ -2073,15 +2382,19 @@ const BUILD_CATS = [
       info:'Paredes en diagonal. Arrastrá en diagonal para encadenar varios tramos de 45°.' },
     { key:'wf',  icon:'🚧', name:'Cerco',     tool:{kind:'wall', fence:true},
       info:'Cerco bajo de jardín. Se dibuja igual que una pared y nunca tapa la vista.' },
-    { key:'d',   icon:'🚪', name:'Puerta',    tool:{kind:'door'},
+    { key:'d',   icon:'🚪', name:'Puerta',    tool:{kind:'opening', op:'door'},
       info:'Click sobre una pared existente para abrir una puerta. Deja pasar la luz del sol.' },
-    { key:'v',   icon:'🪟', name:'Ventana',   tool:{kind:'window'},
+    { key:'v',   icon:'🪟', name:'Ventana',   tool:{kind:'opening', op:'window'},
       info:'Click sobre una pared para poner una ventana: entra el sol y proyecta sombras reales.' },
+    { key:'vr',  icon:'🔘', name:'Ojo de buey', tool:{kind:'opening', op:'round'},
+      info:'Ventana redonda, con el agujero circular calado de verdad en la pared.' },
+    { key:'pv',  icon:'🚪', name:'Puerta ventana', tool:{kind:'opening', op:'french'},
+      info:'Puerta ventana de dos hojas vidriadas, del piso al dintel: la que más luz deja entrar.' },
   ]},
   { id:'pintura', name:'🎨 Pintura', special:'finish',
-    info:'Elegí un revestimiento y hacé click en la cara de la pared que querés pintar. Cada lado se pinta por separado.' },
+    info:'Click pinta una cara. Con Shift apretado pinta todas las paredes que dan a ese ambiente: por dentro el cuarto entero, por fuera la vuelta completa de la casa.' },
   { id:'pisos', name:'🟫 Pisos', special:'floor',
-    info:'Click y arrastrá para pintar un rectángulo. En el piso 1 la losa sólo se apoya sobre la planta baja.' },
+    info:'Click y arrastrá para pintar un rectángulo, o Shift+click para llenar de una un ambiente cerrado. En el piso 1 la losa sólo se apoya sobre la planta baja.' },
   { id:'escaleras', name:'🪜 Escaleras', items:[
     { key:'escalera', icon:'🪜', name:'Escalera', tool:{kind:'object', id:'escalera'},
       info:'Ocupa 1 x 4 baldosas y sube al piso 1. Abre automáticamente el hueco en la losa de arriba.' },
@@ -2150,11 +2463,9 @@ function renderItems(){
         add(itemTile('fin_'+f.id, `<div class="sw" style="background:${finishCSS[f.id]}"></div>`, f.name,
             ()=> pickTool({kind:'paint', finish:f.id, key:'fin_'+f.id}, 'Pintura: '+f.name, c.info)));
     } else if (c.special === 'floor'){
-      for (const f of FLOOR_DEFS){
-        const css = '#'+f.color.toString(16).padStart(6,'0');
-        add(itemTile('f_'+f.id, `<div class="sw" style="background:${css}"></div>`, f.name,
+      for (const f of FLOOR_DEFS)
+        add(itemTile('f_'+f.id, `<div class="sw" style="background:${floorCSS[f.id]}"></div>`, f.name,
             ()=> pickTool({kind:'floor', mat:f.id, key:'f_'+f.id}, 'Piso: '+f.name, c.info)));
-      }
     } else {
       for (const it of c.items)
         add(itemTile(it.key, `<div class="ic">${it.icon}</div>`, it.name,
@@ -2485,6 +2796,7 @@ function animate(now){
     timeMin += dt * speed;
     while (timeMin >= 1440){ timeMin -= 1440; day++; }
   }
+  stepEdgePan(dt);
   updateDayNight(dt);
   renderer.render(scene, camera);
 }
