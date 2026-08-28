@@ -3,7 +3,12 @@
 Juego web de construcción de casas inspirado en el modo Construir/Comprar de **Los Sims 1**.
 Todo en un solo archivo: `index.html`. Se abre en el navegador, sin build ni servidor.
 
-> Carga Three.js r160 desde unpkg, así que la primera vez necesita conexión a internet.
+> **No necesita internet.** Three.js viene incluido dentro del archivo y no hay
+> tipografías ni recursos externos: cero pedidos a otros dominios. Anda igual
+> abriéndolo con doble click, servido en una LAN o subido a cualquier hosting.
+
+Para ponerlo a disposición de un grupo (aula, taller), ver **[COMO-PUBLICAR.md](COMO-PUBLICAR.md)**:
+GitHub Pages, servidor en la red local (`servidor-lan.py`) o repartir el archivo.
 
 ## Controles
 
