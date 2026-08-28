@@ -173,7 +173,11 @@
   <div class="btn sm" id="btnSave" title="Guardar la casa">💾</div>
   <div class="btn sm" id="btnLoad" title="Cargar la casa guardada">📂</div>
   <div class="btn sm" id="btnClear" title="Vaciar el terreno">🧹</div>
+  <div class="sep"></div>
+  <div class="btn sm" id="btnExport" title="Bajar tu casa como archivo (para entregarla o guardarla)">⬇</div>
+  <div class="btn sm" id="btnImport" title="Abrir una casa desde un archivo">⬆</div>
 </div>
+<input type="file" id="fileCasa" accept=".json,application/json" style="display:none">
 
 <div id="compass">
   <div class="btn cbtn" id="rotL" style="left:0;  top:36px;" title="Rotar cámara (,)">↺</div>
@@ -2705,6 +2709,41 @@ $('#btnLoad').onclick = ()=>{
   const before = serialize();
   if (loadState(t)){ commitChange(before); toast('Casa cargada 📂'); } else toast('El guardado está dañado');
 };
+// ---- La casa como archivo: sirve para entregar el trabajo o llevarlo a otra máquina ----
+function nombreDeArchivo(txt){
+  const limpio = (txt || 'casa').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase().slice(0,40);
+  return limpio || 'casa';
+}
+$('#btnExport').onclick = ()=>{
+  const nombre = prompt('¿Cómo se llama tu casa? (podés poner tu nombre)', 'mi casa');
+  if (nombre === null) return;
+  const datos = { juego:'casa-sim', formato:2, nombre, fecha:new Date().toISOString(),
+                  casa: JSON.parse(serialize()) };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(datos)], { type:'application/json' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = 'casa-' + nombreDeArchivo(nombre) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 8000);
+  toast('Casa descargada ⬇');
+};
+const inputCasa = $('#fileCasa');
+$('#btnImport').onclick = ()=>{ inputCasa.value = ''; inputCasa.click(); };
+inputCasa.onchange = ()=>{
+  const archivo = inputCasa.files && inputCasa.files[0];
+  if (!archivo) return;
+  const lector = new FileReader();
+  lector.onload = ()=>{
+    let txt = String(lector.result);
+    try { const d = JSON.parse(txt); if (d && d.casa) txt = JSON.stringify(d.casa); } catch(e){}
+    const before = serialize();
+    if (loadState(txt)){ commitChange(before); toast('Casa abierta: ' + archivo.name); }
+    else toast('Ese archivo no parece una casa de Casa Sim');
+  };
+  lector.onerror = ()=> toast('No pude leer el archivo');
+  lector.readAsText(archivo);
+};
+
 $('#btnClear').onclick = ()=>{
   if (!confirm('¿Vaciar el terreno por completo?')) return;
   const before = serialize();

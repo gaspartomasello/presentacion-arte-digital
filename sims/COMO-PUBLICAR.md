@@ -80,8 +80,13 @@ Es la salida más robusta si el filtro de la escuela no deja pasar nada.
 - **Dónde quedan las casas**: el botón 💾 guarda en el navegador de esa máquina
   (`localStorage`). Es por computadora y por navegador, así que si los alumnos
   cambian de máquina no se llevan la casa, y si el laboratorio borra los perfiles
-  al reiniciar se pierde. Si necesitás que entreguen el trabajo, decime y agrego
-  un botón para **bajar la casa como archivo** y otro para volver a abrirla.
+  al reiniciar se pierde.
+- **Para que entreguen el trabajo**: el botón **⬇** baja la casa como un archivo
+  `.json` chiquito (unos 5 KB). Les pide un nombre y arma el archivo con ese
+  nombre, así te llegan como `casa-sofia-perez.json`. Lo pueden subir a Classroom
+  o mandarte por mail. El botón **⬆** abre cualquiera de esos archivos, así que
+  también sirve para seguir la casa en otra computadora o para que vos revises
+  los trabajos desde la tuya.
 - **Máquinas con poca potencia**: el juego usa sombras en tiempo real. Si va lento
   en las netbooks, apagá *Sombras de contacto* en el panel Vista y bajá el zoom.
   También puedo agregar un modo de calidad baja.

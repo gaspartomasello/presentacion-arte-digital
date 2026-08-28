@@ -55,7 +55,9 @@ GitHub Pages, servidor en la red local (`servidor-lan.py`) o repartir el archivo
 - Contorno de resaltado al pasar el mouse, para saber qué vas a mover o demoler.
 - Ciclo de día y noche con reloj y velocidades: al anochecer las lámparas se encienden solas.
 
-**Guardar**: la casa se guarda en el navegador (`localStorage`) y se puede volver a cargar.
+**Guardar**: 💾 guarda la casa en el navegador (`localStorage`) y 📂 la vuelve a cargar.
+Con **⬇** la bajás como archivo `.json` (para entregarla o llevarla a otra máquina) y
+con **⬆** abrís cualquiera de esos archivos.
 
 Algunos objetos se apoyan sobre otros (el microondas sobre la mesada, la lámpara sobre la mesa de
 luz, la planta chica sobre una mesa) y otros se cuelgan de la pared o del techo.
