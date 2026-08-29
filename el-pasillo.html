@@ -155,8 +155,8 @@
   </div>
   <div class="modo-desc">
     FÁCIL — el colegio como lo conocés.<br>
-    <b>HARDCORE</b> — te buscan doblando esquinas, la nena aparece más cerca cada vez que
-    parpadeás, la linterna no se recupera sola y el busto te da la mitad del tiempo.
+    <b>HARDCORE</b> — las dos cosas de las backrooms te buscan doblando esquinas, está más
+    oscuro, la linterna no se recupera sola y el busto te da la mitad del tiempo.
   </div>
   <div class="nota">Te quedaste adentro después de hora. El pasillo del primer piso, algo
     que no debería existir debajo, y la planta baja con el portón cerrado con candado.
@@ -1372,7 +1372,7 @@ function crearNenaHard(){
     zap.position.set(0,-.25,-.03); pant.add(zap);
     piernas.push(cad);
   });
-  return {grupo:g, tipo:"nena", vel:C().velNena, matar:1.0, t:0, risaT:rnd(1,4), saltoT:rnd(5,9),
+  return {grupo:g, tipo:"nena", vel:C().velNena, matar:1.0, t:0, risaT:rnd(1,4),
           anim:{brazos,piernas,fase:0,ampB:.5,ampP:.62,offB:-.9}};
 }
 
@@ -1922,11 +1922,11 @@ const CFG={
   facil:{ nieblaPas:.052, nieblaBack:.075, nieblaPB:.045, ambPas:.14, ambBack:.32, ambPB:.13,
           gastoLinterna:1.15, recargaLinterna:.55, gastoStam:23, recupStam:17,
           segAcertijo:10, velCosa:2.35, velNena:3.55, velBusto:1.15,
-          risaMin:9, risaMax:20, salto:false, flujo:false, cine:false, modelos:false },
+          risaMin:9, risaMax:20, flujo:false, cine:false, modelos:false },
   hard :{ nieblaPas:.072, nieblaBack:.105, nieblaPB:.066, ambPas:.075, ambBack:.20, ambPB:.075,
-          gastoLinterna:1.95, recargaLinterna:0, gastoStam:31, recupStam:11,
-          segAcertijo:6,  velCosa:2.80, velNena:4.20, velBusto:1.45,
-          risaMin:5, risaMax:11, salto:true, flujo:true, cine:true, modelos:true }
+          gastoLinterna:1.95, recargaLinterna:0, gastoStam:23, recupStam:17,
+          segAcertijo:6,  velCosa:2.35, velNena:3.55, velBusto:1.45,
+          risaMin:5, risaMax:11, flujo:true, cine:true, modelos:true }
 };
 const C=()=>HARD?CFG.hard:CFG.facil;
 
@@ -2469,22 +2469,6 @@ function pasoFlujo(px,pz){
   }
   return bx<0 ? null : [c2w(bx), c2w(by)];
 }
-/* la nena hardcore no corre: aparece más cerca, siempre fuera de tu vista */
-function saltoNena(e){
-  const p=e.grupo.position;
-  for(let i=0;i<24;i++){
-    const a=Math.random()*Math.PI*2, r=3.5+Math.random()*2.5;
-    const x=jugador.pos.x+Math.cos(a)*r, z=jugador.pos.z+Math.sin(a)*r;
-    if(!libreEnBack(x,z,.45)) continue;
-    if(laMiro({x,z})) continue;                       // no puede aparecer a la vista
-    if(Math.hypot(x-jugador.pos.x,z-jugador.pos.z) >= Math.hypot(p.x-jugador.pos.x,p.z-jugador.pos.z)) continue;
-    p.x=x; p.z=z;
-    Audio3.risa(.5, clamp((jugador.pos.x-x)*.1,-1,1));
-    return true;
-  }
-  return false;
-}
-
 function moverEntidades(dt){
   if(modo!=="backrooms" || !entidades.length) return;
   let masCerca=99;
@@ -2518,10 +2502,6 @@ function moverEntidades(dt){
         if(libreEnBack(p.x, p.z+az*v, .4)) p.z+=az*v;
         p.y=e.anim?0:Math.abs(Math.sin(tiempo*9))*0.045;  // trotecito
         animarPaso(e, e.vel, dt);
-        if(C().salto){
-          e.saltoT-=dt;
-          if(e.saltoT<=0 && dist>5.5){ if(saltoNena(e)) e.saltoT=rnd(6,11); else e.saltoT=1.5; }
-        }
         e.risaT-=dt;
         if(e.risaT<=0 && dist<18){
           Audio3.risa(clamp(.85-dist*.035,.18,.85), clamp(-nx,-1,1));
@@ -2530,8 +2510,7 @@ function moverEntidades(dt){
       }
       e.grupo.rotation.y=Math.atan2(-dx,-dz);   // que te mire de frente
     } else {
-      // el merodeador nunca para; en hardcore además se va acelerando
-      if(HARD) e.vel=Math.min(C().velCosa+1.1, e.vel+dt*0.012);
+      // el merodeador nunca para, pero siempre al mismo paso
       const v=e.vel*dt;
       let ax=nx, az=nz;
       if(C().flujo){
