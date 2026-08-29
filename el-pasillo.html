@@ -68,6 +68,18 @@
   #cargando{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
     background:#05060a;font-size:11px;letter-spacing:.4em;opacity:.6}
 
+  /* ---------- Selector de dificultad ---------- */
+  .modos{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .modos button{min-width:210px}
+  #jugarHard{border-color:rgba(139,26,26,.75);color:#e0b4b4}
+  #jugarHard:hover{background:#8b1a1a;color:#f2e8e8;border-color:#8b1a1a}
+  .modo-desc{margin-top:22px;font-size:10px;opacity:.42;letter-spacing:.14em;
+    line-height:2.2;max-width:560px}
+  .modo-desc b{color:#c98b8b;font-weight:400}
+  #modoTag{position:absolute;right:18px;top:16px;font-size:10px;letter-spacing:.3em;
+    color:#8b1a1a;opacity:.85;display:none}
+  #modoTag.on{display:block}
+
   /* ---------- Acertijo del busto ---------- */
   #acertijo{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;
     background:rgba(4,5,8,.82);pointer-events:auto}
@@ -107,6 +119,7 @@
   <div id="objetivo"></div>
   <div id="accion"></div>
   <div id="reloj">03:47:00</div>
+  <div id="modoTag">HARDCORE</div>
   <div id="susurro"></div>
   <div id="flash"></div>
 </div>
@@ -122,7 +135,7 @@
     <div class="preg" id="preg"></div>
     <div class="ops" id="ops"></div>
     <div class="cuenta"><i id="cuentaBar"></i></div>
-    <div class="pista">ELEGÍ CON 1 · 2 · 3 · 4 — TENÉS 10 SEGUNDOS</div>
+    <div class="pista" id="pistaAcertijo">ELEGÍ CON 1 · 2 · 3 · 4 — TENÉS 10 SEGUNDOS</div>
   </div>
 </div>
 
@@ -136,7 +149,15 @@
     <div><b>F</b>linterna</div>
     <div><b>E</b>revisar / usar</div>
   </div>
-  <button id="jugar">ENTRAR</button>
+  <div class="modos">
+    <button id="jugarFacil">MODO FÁCIL</button>
+    <button id="jugarHard">MODO HARDCORE</button>
+  </div>
+  <div class="modo-desc">
+    FÁCIL — el colegio como lo conocés.<br>
+    <b>HARDCORE</b> — te buscan doblando esquinas, la nena aparece más cerca cada vez que
+    parpadeás, la linterna no se recupera sola y el busto te da la mitad del tiempo.
+  </div>
   <div class="nota">Te quedaste adentro después de hora. El pasillo del primer piso, algo
     que no debería existir debajo, y la planta baja con el portón cerrado con candado.
     Usá auriculares.</div>
@@ -1171,7 +1192,8 @@ function construirBackrooms(){
   const lp=new THREE.PointLight(0x2ecc71,1.6,10); lp.position.set(sx,1.6,sz); mundoBack.add(lp);
 
   // --- LAS DOS ENTIDADES ---
-  entidades = [ crearMerodeador(), crearNena() ];
+  entidades = C().modelos ? [ crearMerodeadorHard(), crearNenaHard() ]
+                          : [ crearMerodeador(), crearNena() ];
   const c1=celdaLibre(9), c2=celdaLibre(7);
   entidades[0].grupo.position.set(c2w(c1[0]),0,c2w(c1[1]));
   entidades[1].grupo.position.set(c2w(c2[0]),0,c2w(c2[1]));
@@ -1185,6 +1207,173 @@ function celdaLibre(minD){
   for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)
     if(!grilla[y][x] && Math.hypot(x-1,y-1)>minD) libres.push([x,y]);
   return libres.length ? libres[Math.floor(Math.random()*libres.length)] : [N-3,N-3];
+}
+
+/* --- sombra de contacto: un disco oscuro que las apoya en el piso --- */
+const sombraTex=(()=>{
+  const [c,x]=lienzo(128,128);
+  const g=x.createRadialGradient(64,64,4,64,64,62);
+  g.addColorStop(0,"rgba(0,0,0,.8)"); g.addColorStop(.55,"rgba(0,0,0,.34)");
+  g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+})();
+function sombraContacto(grupo,r){
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(r,r),
+    new THREE.MeshBasicMaterial({map:sombraTex,transparent:true,depthWrite:false}));
+  m.rotation.x=-Math.PI/2; m.position.y=.02; grupo.add(m);
+}
+/* --- caras dibujadas: leen mucho mejor que la geometría --- */
+function texCaraMerodeador(){
+  const [c,x]=lienzo(256,320);
+  const g=x.createRadialGradient(128,150,20,128,160,150);
+  g.addColorStop(0,"#cfc6b4"); g.addColorStop(.7,"#a89e8c"); g.addColorStop(1,"#5d5646");
+  x.fillStyle=g; x.beginPath(); x.ellipse(128,160,86,132,0,0,7); x.fill();
+  x.fillStyle="rgba(20,18,14,.85)";
+  x.beginPath(); x.ellipse(92,138,26,34,0,0,7); x.fill();
+  x.beginPath(); x.ellipse(164,138,26,34,0,0,7); x.fill();
+  x.fillStyle="#07070a";
+  x.beginPath(); x.ellipse(92,142,15,21,0,0,7); x.fill();
+  x.beginPath(); x.ellipse(164,142,15,21,0,0,7); x.fill();
+  x.fillStyle="rgba(255,255,255,.85)";
+  x.beginPath(); x.arc(97,134,4,0,7); x.fill();
+  x.beginPath(); x.arc(169,134,4,0,7); x.fill();
+  x.fillStyle="rgba(30,26,20,.7)"; x.fillRect(120,176,16,26);
+  x.fillStyle="#0a0a0c"; x.beginPath(); x.ellipse(128,236,30,40,0,0,7); x.fill();
+  x.fillStyle="rgba(90,80,68,.5)";
+  for(let i=0;i<40;i++) x.fillRect(40+Math.random()*176,50+Math.random()*230,1+Math.random()*3,1+Math.random()*18);
+  return new THREE.CanvasTexture(c);
+}
+function texCaraNena(){
+  const [c,x]=lienzo(256,320);
+  x.fillStyle="#cfc7b4"; x.beginPath(); x.ellipse(128,168,84,116,0,0,7); x.fill();
+  x.fillStyle="#3a0a08"; x.beginPath(); x.ellipse(128,244,30,12,0,0,7); x.fill();
+  x.fillStyle="#efe9dc";
+  for(let i=0;i<7;i++) x.fillRect(102+i*8,238,5,10);
+  x.fillStyle="#0d0b09";
+  x.beginPath(); x.moveTo(24,150); x.bezierCurveTo(30,20,226,20,232,150);
+  x.lineTo(232,300); x.bezierCurveTo(190,210,66,210,24,300); x.closePath(); x.fill();
+  for(let i=0;i<26;i++){
+    x.strokeStyle="rgba(10,9,8,.9)"; x.lineWidth=3+Math.random()*5;
+    const px=30+Math.random()*196;
+    x.beginPath(); x.moveTo(px,60);
+    x.quadraticCurveTo(px+(Math.random()-.5)*50,190,px+(Math.random()-.5)*70,300); x.stroke();
+  }
+  return new THREE.CanvasTexture(c);
+}
+function miembro(largo,r1,r2,mat){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,largo,8),mat);
+  m.geometry.translate(0,-largo/2,0);        // pivote arriba, para que gire desde el hombro
+  return m;
+}
+
+/* MERODEADOR HARDCORE: articulado, con cara y sombra */
+function crearMerodeadorHard(){
+  const g=new THREE.Group();
+  const tela=new THREE.MeshLambertMaterial({color:0x101216});
+  const osc =new THREE.MeshLambertMaterial({color:0x08090c});
+  sombraContacto(g,1.5);
+  const torso=new THREE.Group(); torso.position.y=1.12; torso.rotation.x=.13; g.add(torso);
+  const pecho=new THREE.Mesh(new THREE.CylinderGeometry(.21,.27,.72,10),tela);
+  pecho.position.y=.14; torso.add(pecho);
+  const cadera=new THREE.Mesh(new THREE.CylinderGeometry(.24,.20,.3,10),osc);
+  cadera.position.y=-.32; torso.add(cadera);
+  const hom=new THREE.Mesh(new THREE.SphereGeometry(.245,12,10),tela);
+  hom.scale.set(1.35,.55,.9); hom.position.y=.46; torso.add(hom);
+  const cuello=new THREE.Mesh(new THREE.CylinderGeometry(.075,.09,.3,8),tela);
+  cuello.position.y=.62; torso.add(cuello);
+  const cabeza=new THREE.Group(); cabeza.position.y=.86; cabeza.rotation.z=.09; torso.add(cabeza);
+  const craneo=new THREE.Mesh(new THREE.SphereGeometry(.2,16,14),osc);
+  craneo.scale.set(.92,1.15,.95); cabeza.add(craneo);
+  const cara=new THREE.Mesh(new THREE.PlaneGeometry(.3,.375),
+    new THREE.MeshLambertMaterial({map:texCaraMerodeador(),transparent:true,
+      emissive:0x2a2620,side:THREE.DoubleSide}));
+  cara.position.set(0,.01,-.185); cara.rotation.y=Math.PI; cabeza.add(cara);
+  const brazos=[], piernas=[];
+  [-.3,.3].forEach(x=>{
+    const hombro=new THREE.Group(); hombro.position.set(x,.42,0); torso.add(hombro);
+    hombro.add(miembro(.62,.062,.05,tela));
+    const ante=new THREE.Group(); ante.position.y=-.62; ante.rotation.x=.3; hombro.add(ante);
+    ante.add(miembro(.6,.05,.036,tela));
+    const mano=new THREE.Group(); mano.position.y=-.6; ante.add(mano);
+    for(let i=0;i<4;i++){
+      const d=miembro(.19,.016,.008,osc);
+      d.position.set(-.045+i*.03,0,0); d.rotation.x=.5+i*.12; mano.add(d);
+    }
+    brazos.push(hombro);
+  });
+  [-.13,.13].forEach(x=>{
+    const cad=new THREE.Group(); cad.position.set(x,-.42,0); torso.add(cad);
+    cad.add(miembro(.62,.085,.062,osc));
+    const pant=new THREE.Group(); pant.position.y=-.62; cad.add(pant);
+    pant.add(miembro(.6,.06,.045,osc));
+    const pie=new THREE.Mesh(new THREE.BoxGeometry(.11,.055,.26),osc);
+    pie.position.set(0,-.62,-.06); pant.add(pie);
+    piernas.push(cad);
+  });
+  return {grupo:g, tipo:"merodeador", vel:C().velCosa, matar:1.05, t:0,
+          anim:{brazos,piernas,fase:0,ampB:.42,ampP:.55,offB:-.18}};
+}
+
+/* NENA HARDCORE: vestido con vuelo, mechones, piernas en trote */
+function crearNenaHard(){
+  const g=new THREE.Group();
+  const piel=new THREE.MeshLambertMaterial({color:0xc9c1ad});
+  const tela=new THREE.MeshLambertMaterial({color:0xd9d4c6});
+  const telaS=new THREE.MeshLambertMaterial({color:0xb5b0a0});
+  sombraContacto(g,1.0);
+  const cuerpo=new THREE.Group(); cuerpo.position.y=.62; cuerpo.rotation.x=.06; g.add(cuerpo);
+  const perfil=[];
+  for(let i=0;i<=12;i++){
+    const t=i/12, y=-.30+t*.54;
+    perfil.push(new THREE.Vector2(.105+Math.pow(t,.6)*.03+(1-t)*.15+Math.sin(t*8)*.009, y));
+  }
+  cuerpo.add(new THREE.Mesh(new THREE.LatheGeometry(perfil,20),tela));
+  const ruedo=new THREE.Mesh(new THREE.TorusGeometry(.258,.018,6,24),telaS);
+  ruedo.rotation.x=Math.PI/2; ruedo.position.y=-.30; cuerpo.add(ruedo);
+  const cuellito=new THREE.Mesh(new THREE.CylinderGeometry(.062,.075,.13,10),piel);
+  cuellito.position.y=.24; cuerpo.add(cuellito);
+  const cabeza=new THREE.Group(); cabeza.position.y=.4;
+  cabeza.rotation.z=-.10; cabeza.rotation.x=-.18; cuerpo.add(cabeza);
+  const craneo=new THREE.Mesh(new THREE.SphereGeometry(.155,16,14),piel);
+  craneo.scale.set(1,1.06,.96); cabeza.add(craneo);
+  const cara=new THREE.Mesh(new THREE.PlaneGeometry(.26,.325),
+    new THREE.MeshLambertMaterial({map:texCaraNena(),transparent:true,
+      emissive:0x2a2622,side:THREE.DoubleSide}));
+  cara.position.set(0,-.005,-.163); cara.rotation.y=Math.PI; cabeza.add(cara);
+  const pelo=new THREE.Mesh(new THREE.SphereGeometry(.166,16,14,0,Math.PI*2,0,Math.PI*.47),
+    new THREE.MeshLambertMaterial({color:0x0e0c0a}));
+  pelo.position.set(0,.03,.012); cabeza.add(pelo);
+  for(let i=0;i<12;i++){
+    const a=Math.PI*.28+(i/11)*Math.PI*1.44;
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(.014,.007,.26+Math.random()*.14,5),
+      new THREE.MeshLambertMaterial({color:0x0d0b09}));
+    m.geometry.translate(0,-.18,0);
+    m.position.set(Math.cos(a)*.13,.06,Math.sin(a)*.115);
+    m.rotation.z=Math.cos(a)*.28; m.rotation.x=Math.sin(a)*.24; cabeza.add(m);
+  }
+  const brazos=[], piernas=[];
+  [-.16,.16].forEach((x,i)=>{
+    const hombro=new THREE.Group(); hombro.position.set(x,.2,0); cuerpo.add(hombro);
+    hombro.add(miembro(.24,.038,.031,piel));
+    const ante=new THREE.Group(); ante.position.y=-.24; ante.rotation.x=i?.5:.1; hombro.add(ante);
+    ante.add(miembro(.23,.031,.024,piel));
+    const mano=new THREE.Mesh(new THREE.SphereGeometry(.036,8,8),piel);
+    mano.position.y=-.24; ante.add(mano);
+    brazos.push(hombro);
+  });
+  [-.09,.09].forEach(x=>{
+    const cad=new THREE.Group(); cad.position.set(x,-.28,0); cuerpo.add(cad);
+    cad.add(miembro(.26,.05,.04,piel));
+    const pant=new THREE.Group(); pant.position.y=-.26; cad.add(pant);
+    pant.add(miembro(.24,.042,.034,new THREE.MeshLambertMaterial({color:0xe8e4d6})));
+    const zap=new THREE.Mesh(new THREE.BoxGeometry(.08,.045,.16),
+      new THREE.MeshLambertMaterial({color:0x2a2622}));
+    zap.position.set(0,-.25,-.03); pant.add(zap);
+    piernas.push(cad);
+  });
+  return {grupo:g, tipo:"nena", vel:C().velNena, matar:1.0, t:0, risaT:rnd(1,4), saltoT:rnd(5,9),
+          anim:{brazos,piernas,fase:0,ampB:.5,ampP:.62,offB:-.9}};
 }
 
 /* ENTIDAD 1 — EL MERODEADOR: te sigue siempre, lento y constante */
@@ -1209,7 +1398,7 @@ function crearMerodeador(){
   [-.26,.26].forEach(x=>{
     const b=new THREE.Mesh(brazo,matB); b.position.set(x,.92,0); g.add(b);
   });
-  return {grupo:g, tipo:"merodeador", vel:2.35, matar:1.05, t:0};
+  return {grupo:g, tipo:"merodeador", vel:C().velCosa, matar:1.05, t:0};
 }
 
 /* ENTIDAD 2 — LA NENA: se queda quieta mientras la mirás */
@@ -1233,7 +1422,7 @@ function crearNena(){
   [-.20,.20].forEach(x=>{
     const b=new THREE.Mesh(brazo,piel); b.position.set(x,.86,0); g.add(b);
   });
-  return {grupo:g, tipo:"nena", vel:3.55, matar:1.0, t:0, risaT:rnd(1,4)};
+  return {grupo:g, tipo:"nena", vel:C().velNena, matar:1.0, t:0, risaT:rnd(1,4)};
 }
 let entidades=[], vistaNena=false;
 
@@ -1574,7 +1763,7 @@ function construirPlantaBaja(){
     const luzOjos=new THREE.PointLight(0xff1608,0,7); luzOjos.position.set(-.35,2.1,0); g.add(luzOjos);
 
     bloque(x-.55,z-.55,x+.55,z+.55);
-    bustoObj={grupo:g, ojos, luz:luzOjos, enojado:false, vel:1.15, pasoT:0, base:{x,z}};
+    bustoObj={grupo:g, ojos, luz:luzOjos, enojado:false, vel:C().velBusto, pasoT:0, base:{x,z}};
     interactivos.push({tipo:"busto", x:x+1.1, z, r:2.0, etiqueta:"tocar la estatua"});
     interactivos.push({tipo:"info", x:x+1.1, z:z+1.3, r:1.5, etiqueta:"leer el pedestal",
       texto:"WILLIAM C. MORRIS · 1864-1932\nCONSAGRÓ SU VIDA A LA NIÑEZ\n\nLa chapita de bronce de arriba está floja."});
@@ -1710,7 +1899,7 @@ function prenderLuzPlanta(){
       Audio3.chispazo(.10);
     }, i*80 + Math.random()*150);
   });
-  ambiente.intensity=.30; ambiente.color.setHex(0x3c4650);
+  ambiente.intensity=HARD?.20:.30; ambiente.color.setHex(0x3c4650);
 }
 
 /* ==========================================================
@@ -1724,6 +1913,22 @@ const jugador = {
   stam:100, sinAire:false, jadeoT:0, faseJadeo:0
 };
 let modo="pasillo", jugando=false, cazado=false, tiempo=0, latidoT=0, risaT=rnd(6,12);
+
+/* ================= DIFICULTAD =================
+   FÁCIL deja el juego exactamente como estaba.
+   HARDCORE cambia números y enciende los comportamientos nuevos.  */
+let HARD=false;
+const CFG={
+  facil:{ nieblaPas:.052, nieblaBack:.075, nieblaPB:.045, ambPas:.14, ambBack:.32, ambPB:.13,
+          gastoLinterna:1.15, recargaLinterna:.55, gastoStam:23, recupStam:17,
+          segAcertijo:10, velCosa:2.35, velNena:3.55, velBusto:1.15,
+          risaMin:9, risaMax:20, salto:false, flujo:false, cine:false, modelos:false },
+  hard :{ nieblaPas:.072, nieblaBack:.105, nieblaPB:.066, ambPas:.075, ambBack:.20, ambPB:.075,
+          gastoLinterna:1.95, recargaLinterna:0, gastoStam:31, recupStam:11,
+          segAcertijo:6,  velCosa:2.80, velNena:4.20, velBusto:1.45,
+          risaMin:5, risaMax:11, salto:true, flujo:true, cine:true, modelos:true }
+};
+const C=()=>HARD?CFG.hard:CFG.facil;
 
 // rectángulos transitables del pasillo
 const zonas = [
@@ -1814,10 +2019,11 @@ function abrirAcertijo(){
   $("ops").querySelectorAll("button").forEach(bt=>bt.onclick=()=>responder(+bt.dataset.i));
   const bar=$("cuentaBar");
   bar.style.transition="none"; bar.style.width="100%";
-  requestAnimationFrame(()=>{ bar.style.transition="width 10s linear"; bar.style.width="0%"; });
+  requestAnimationFrame(()=>{ bar.style.transition="width "+C().segAcertijo+"s linear"; bar.style.width="0%"; });
+  $("pistaAcertijo").textContent="ELEGÍ CON 1 · 2 · 3 · 4 — TENÉS "+C().segAcertijo+" SEGUNDOS";
   $("acertijo").classList.remove("oculta");
   clearTimeout(acertijoTO);
-  acertijoTO=setTimeout(()=>responder(-1), 10000);
+  acertijoTO=setTimeout(()=>responder(-1), C().segAcertijo*1000);
 }
 function responder(i){
   if(!acertijoActivo) return;
@@ -1851,7 +2057,8 @@ function moverBusto(dt){
   const g=bustoObj.grupo;
   const dx=jugador.pos.x-g.position.x, dz=jugador.pos.z-g.position.z;
   const d=Math.hypot(dx,dz);
-  if(d<1.0){ morir(); return; }
+  if(d<1.0){ morir(bustoObj.grupo); return; }
+  if(HARD) bustoObj.vel=Math.min(C().velBusto+.9, bustoObj.vel+dt*0.02);
   const nx=dx/d, nz=dz/d, v=bustoObj.vel*dt;
   if(zonaPlanta(g.position.x+nx*v, g.position.z)) g.position.x+=nx*v;
   if(zonaPlanta(g.position.x, g.position.z+nz*v)) g.position.z+=nz*v;
@@ -2057,9 +2264,9 @@ function entrarBackrooms(){
   setTimeout(()=>{
     construirBackrooms();
     mundoPasillo.visible=false; mundoBack.visible=true;
-    scene.fog=new THREE.FogExp2(0x1a1405,.075);
+    scene.fog=new THREE.FogExp2(0x1a1405,C().nieblaBack);
     scene.background=new THREE.Color(0x1a1405);
-    ambiente.color.setHex(0x3a3016); ambiente.intensity=.32;
+    ambiente.color.setHex(0x3a3016); ambiente.intensity=C().ambBack;
     jugador.pos.set(c2w(1),1.62,c2w(1));
     jugador.yaw=Math.PI*.25; jugador.pitch=0;
     modo="backrooms";
@@ -2069,14 +2276,50 @@ function entrarBackrooms(){
     objetivo("<b>Objetivo:</b> encontrá la puerta verde.<br>Hay dos cosas buscándote");
   },700);
 }
-function morir(){
+let cine=null;
+function morir(quien){
   if(cazado) return;
   cazado=true; jugando=false;
   Audio3.grito();
-  document.exitPointerLock && document.exitPointerLock();
+  if(document.pointerLockElement) document.exitPointerLock();
+  if(C().cine && quien && quien.position){
+    // la cámara gira sola hacia lo que te agarró y eso se te viene encima
+    cine={obj:quien, t:0};
+    Audio3.latido(.9);
+    return;
+  }
   mostrarCursor();
   fundido(1);
   setTimeout(()=>{ $("fin").classList.remove("oculta"); },600);
+}
+function correrCine(dt){
+  cine.t+=dt;
+  const o=cine.obj;
+  const dx=o.position.x-jugador.pos.x, dz=o.position.z-jugador.pos.z;
+  const d=Math.max(.35,Math.hypot(dx,dz));
+  // girar hacia la entidad
+  let da=Math.atan2(-dx/d,-dz/d)-jugador.yaw;
+  while(da>Math.PI)da-=Math.PI*2; while(da<-Math.PI)da+=Math.PI*2;
+  jugador.yaw += da*Math.min(1,dt*10);
+  const objPitch=Math.atan2(1.72-jugador.pos.y, d);
+  jugador.pitch += (objPitch-jugador.pitch)*Math.min(1,dt*7);
+  // se te viene encima, pero se frena a un brazo: si entra en la cámara no se ve nada
+  const k=Math.min(1,dt*2.6), nueva=d+(.82-d)*k;
+  o.position.x = jugador.pos.x + (dx/d)*nueva;
+  o.position.z = jugador.pos.z + (dz/d)*nueva;
+  // tirón de zoom
+  camera.fov = 72 - 15*Math.min(1,cine.t/.9);
+  camera.updateProjectionMatrix();
+  // temblor
+  camera.position.set(jugador.pos.x + Math.sin(cine.t*47)*.018,
+                      jugador.pos.y + Math.cos(cine.t*39)*.022,
+                      jugador.pos.z + Math.cos(cine.t*53)*.018);
+  camera.rotation.y=jugador.yaw; camera.rotation.x=jugador.pitch;
+  if(cine.t>.95){
+    cine=null; camera.fov=72; camera.updateProjectionMatrix();
+    mostrarCursor(); fundido(1);
+    setTimeout(()=>{ $("fin").classList.remove("oculta"); },480);
+  }
 }
 function entrarPlantaBaja(){
   if(modo!=="backrooms") return;
@@ -2086,9 +2329,9 @@ function entrarPlantaBaja(){
   setTimeout(()=>{
     construirPlantaBaja();
     mundoBack.visible=false; mundoPasillo.visible=false; mundoPlanta.visible=true;
-    scene.fog=new THREE.FogExp2(0x080b0f,.045);
+    scene.fog=new THREE.FogExp2(0x080b0f,C().nieblaPB);
     scene.background=new THREE.Color(0x080b0f);
-    ambiente.color.setHex(0x2a3440); ambiente.intensity=.13;
+    ambiente.color.setHex(0x2a3440); ambiente.intensity=C().ambPB;
     jugador.pos.set(0,1.60,-40.4); jugador.yaw=Math.PI; jugador.pitch=0;
     modo="planta";
     Audio3.nivelDrone(.12);
@@ -2107,7 +2350,8 @@ function salirDeLaEscuela(){
   setTimeout(()=>{ $("ganaste").classList.remove("oculta"); },700);
 }
 function reiniciar(){
-  cazado=false; modo="pasillo";
+  cazado=false; cine=null; flujo=null; modo="pasillo";
+  camera.fov=72; camera.updateProjectionMatrix();
   mundoPasillo.visible=true; mundoBack.visible=false; mundoPlanta.visible=false;
   interactivos=[]; luzPlanta=false; tieneLlave=false;
   acertijoActivo=false; acertijoFallado=false; acertijoResuelto=false;
@@ -2116,9 +2360,9 @@ function reiniciar(){
   jugador.stam=100; jugador.sinAire=false;
   objetivo("<b>Objetivo:</b> salí del pasillo.<br>Las puertas del fondo, o el ascensor");
   $("aguante").classList.remove("vacio");
-  scene.fog=new THREE.FogExp2(0x090c11,.052);
+  scene.fog=new THREE.FogExp2(0x090c11,C().nieblaPas);
   scene.background=new THREE.Color(0x090c11);
-  ambiente.color.setHex(0x22303f); ambiente.intensity=.14;
+  ambiente.color.setHex(0x22303f); ambiente.intensity=C().ambPas;
   jugador.pos.set(0,1.60,-.9); jugador.yaw=0; jugador.pitch=0;
   jugador.bateria=100; jugador.luzOn=true;
   tiempo=0; risaT=rnd(6,12); vistaNena=false;
@@ -2132,14 +2376,21 @@ function reiniciar(){
 scene.fog=new THREE.FogExp2(0x090c11,.052);
 scene.background=new THREE.Color(0x090c11);
 
-$("jugar").onclick=()=>{
+function empezar(hard){
+  HARD=!!hard;
+  $("modoTag").classList.toggle("on",HARD);
   Audio3.init();
+  scene.fog=new THREE.FogExp2(0x090c11,C().nieblaPas);
+  ambiente.intensity=C().ambPas;
   $("menu").classList.add("oculta");
   objetivo("<b>Objetivo:</b> salí del pasillo.<br>Las puertas del fondo, o el ascensor");
   jugando=true;
-  if(!esTactil) renderer.domElement.requestPointerLock();
-  susurrar("las puertas del fondo… o el ascensor", 5000);
-};
+  if(!esTactil){ try{ renderer.domElement.requestPointerLock(); }catch(e){} }
+  susurrar(HARD ? "esta vez no estás solo desde el principio"
+                : "las puertas del fondo… o el ascensor", 5000);
+}
+$("jugarFacil").onclick=()=>empezar(false);
+$("jugarHard").onclick =()=>empezar(true);
 $("seguir").onclick=reanudar;
 $("pantallaCompleta").onclick=()=>{ pantallaCompleta(); setTimeout(reanudar,120); };
 $("volverEmpezar").onclick=()=>{ $("pausa").classList.add("oculta"); reiniciar(); };
@@ -2171,6 +2422,69 @@ function gestionarLuces(dt){
   }
 }
 
+/* ciclo de caminata: brazos y piernas alternados con senos */
+function animarPaso(e, vel, dt){
+  if(!e.anim) return;
+  const a=e.anim;
+  a.fase += vel*dt*3.4;
+  const s1=Math.sin(a.fase), s2=Math.cos(a.fase*2);
+  a.piernas[0].rotation.x =  s1*a.ampP;
+  a.piernas[1].rotation.x = -s1*a.ampP;
+  a.brazos[0].rotation.x  = -s1*a.ampB + a.offB;
+  a.brazos[1].rotation.x  =  s1*a.ampB + a.offB;
+  e.grupo.position.y = Math.abs(s2)*0.03;
+}
+
+/* ===== campo de flujo: distancia hasta el jugador por todo el laberinto.
+   Con esto las entidades doblan esquinas en vez de encajarse en las paredes. */
+let flujo=null, flujoT=0;
+function calcularFlujo(){
+  const cx=Math.round(jugador.pos.x/CEL+(N-1)/2), cy=Math.round(jugador.pos.z/CEL+(N-1)/2);
+  if(cx<0||cy<0||cx>=N||cy>=N||!grilla.length||grilla[cy][cx]===1){ flujo=null; return; }
+  const d=new Int32Array(N*N).fill(-1), q=new Int32Array(N*N);
+  let qs=0,qe=0;
+  d[cy*N+cx]=0; q[qe++]=cy*N+cx;
+  while(qs<qe){
+    const i=q[qs++], x=i%N, y=(i/N)|0, dd=d[i];
+    const nb=[[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
+    for(const [nx,ny] of nb){
+      if(nx<1||ny<1||nx>=N-1||ny>=N-1) continue;
+      const ni=ny*N+nx;
+      if(d[ni]!==-1||grilla[ny][nx]===1) continue;
+      d[ni]=dd+1; q[qe++]=ni;
+    }
+  }
+  flujo=d;
+}
+function pasoFlujo(px,pz){
+  if(!flujo) return null;
+  const cx=Math.round(px/CEL+(N-1)/2), cy=Math.round(pz/CEL+(N-1)/2);
+  if(cx<1||cy<1||cx>=N-1||cy>=N-1) return null;
+  const cur=flujo[cy*N+cx];
+  if(cur<=0) return null;                      // ya está en tu celda: que vaya derecho
+  let best=cur, bx=-1, by=-1;
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const nx=cx+dx, ny=cy+dy, v=flujo[ny*N+nx];
+    if(v>=0 && v<best){ best=v; bx=nx; by=ny; }
+  }
+  return bx<0 ? null : [c2w(bx), c2w(by)];
+}
+/* la nena hardcore no corre: aparece más cerca, siempre fuera de tu vista */
+function saltoNena(e){
+  const p=e.grupo.position;
+  for(let i=0;i<24;i++){
+    const a=Math.random()*Math.PI*2, r=3.5+Math.random()*2.5;
+    const x=jugador.pos.x+Math.cos(a)*r, z=jugador.pos.z+Math.sin(a)*r;
+    if(!libreEnBack(x,z,.45)) continue;
+    if(laMiro({x,z})) continue;                       // no puede aparecer a la vista
+    if(Math.hypot(x-jugador.pos.x,z-jugador.pos.z) >= Math.hypot(p.x-jugador.pos.x,p.z-jugador.pos.z)) continue;
+    p.x=x; p.z=z;
+    Audio3.risa(.5, clamp((jugador.pos.x-x)*.1,-1,1));
+    return true;
+  }
+  return false;
+}
+
 function moverEntidades(dt){
   if(modo!=="backrooms" || !entidades.length) return;
   let masCerca=99;
@@ -2180,7 +2494,7 @@ function moverEntidades(dt){
     const dx=jugador.pos.x-p.x, dz=jugador.pos.z-p.z;
     const dist=Math.hypot(dx,dz);
     masCerca=Math.min(masCerca,dist);
-    if(dist<e.matar){ morir(); return; }
+    if(dist<e.matar){ morir(e.grupo); return; }
     const nx=dx/dist, nz=dz/dist;
 
     if(e.tipo==="nena"){
@@ -2192,11 +2506,22 @@ function moverEntidades(dt){
           susurrar("no la mires… pero tampoco dejes de mirarla", 4200);
         }
         p.y=0;                                  // se queda clavada
+        if(e.anim) e.anim.brazos.concat(e.anim.piernas).forEach(m=>m.rotation.x*=.85);
       } else {
         const v=e.vel*dt*(dist>10?1.2:1);
-        if(libreEnBack(p.x+nx*v, p.z, .4)) p.x+=nx*v;
-        if(libreEnBack(p.x, p.z+nz*v, .4)) p.z+=nz*v;
-        p.y=Math.abs(Math.sin(tiempo*9))*0.045;  // trotecito
+        let ax=nx, az=nz;
+        if(C().flujo){
+          const t=pasoFlujo(p.x,p.z);
+          if(t){ const ddx=t[0]-p.x, ddz=t[1]-p.z, dd=Math.hypot(ddx,ddz)||1; ax=ddx/dd; az=ddz/dd; }
+        }
+        if(libreEnBack(p.x+ax*v, p.z, .4)) p.x+=ax*v;
+        if(libreEnBack(p.x, p.z+az*v, .4)) p.z+=az*v;
+        p.y=e.anim?0:Math.abs(Math.sin(tiempo*9))*0.045;  // trotecito
+        animarPaso(e, e.vel, dt);
+        if(C().salto){
+          e.saltoT-=dt;
+          if(e.saltoT<=0 && dist>5.5){ if(saltoNena(e)) e.saltoT=rnd(6,11); else e.saltoT=1.5; }
+        }
         e.risaT-=dt;
         if(e.risaT<=0 && dist<18){
           Audio3.risa(clamp(.85-dist*.035,.18,.85), clamp(-nx,-1,1));
@@ -2205,12 +2530,19 @@ function moverEntidades(dt){
       }
       e.grupo.rotation.y=Math.atan2(-dx,-dz);   // que te mire de frente
     } else {
-      // el merodeador nunca para
+      // el merodeador nunca para; en hardcore además se va acelerando
+      if(HARD) e.vel=Math.min(C().velCosa+1.1, e.vel+dt*0.012);
       const v=e.vel*dt;
-      if(libreEnBack(p.x+nx*v, p.z, .4)) p.x+=nx*v;
-      if(libreEnBack(p.x, p.z+nz*v, .4)) p.z+=nz*v;
+      let ax=nx, az=nz;
+      if(C().flujo){
+        const t=pasoFlujo(p.x,p.z);
+        if(t){ const ddx=t[0]-p.x, ddz=t[1]-p.z, dd=Math.hypot(ddx,ddz)||1; ax=ddx/dd; az=ddz/dd; }
+      }
+      if(libreEnBack(p.x+ax*v, p.z, .4)) p.x+=ax*v;
+      if(libreEnBack(p.x, p.z+az*v, .4)) p.z+=az*v;
       e.grupo.rotation.y=Math.atan2(-dx,-dz);
-      p.y=Math.sin(tiempo*7)*0.035;
+      p.y=e.anim?0:Math.sin(tiempo*7)*0.035;
+      animarPaso(e, e.vel, dt);
     }
   }
 
@@ -2247,10 +2579,10 @@ function loop(){
     const seMueve=mag>0.01;
     const corriendo = quiereCorrer && seMueve && !jugador.sinAire && jugador.stam>0;
     if(corriendo){
-      jugador.stam=clamp(jugador.stam-dt*23,0,100);
+      jugador.stam=clamp(jugador.stam-dt*C().gastoStam,0,100);
       if(jugador.stam<=0) jugador.sinAire=true;
     } else {
-      jugador.stam=clamp(jugador.stam+dt*(jugador.sinAire?10:17),0,100);
+      jugador.stam=clamp(jugador.stam+dt*(jugador.sinAire?C().recupStam*.6:C().recupStam),0,100);
       if(jugador.sinAire && jugador.stam>=25) jugador.sinAire=false;   // 1/4 de la barra
     }
     if(jugador.sinAire || (corriendo && jugador.stam<32)){
@@ -2286,10 +2618,10 @@ function loop(){
 
     /* --- batería --- */
     if(jugador.luzOn){
-      jugador.bateria=clamp(jugador.bateria-dt*1.15,0,100);
+      jugador.bateria=clamp(jugador.bateria-dt*C().gastoLinterna,0,100);
       if(jugador.bateria<=0){ jugador.luzOn=false; susurrar("se quedó sin pila", 3000); }
     } else {
-      jugador.bateria=clamp(jugador.bateria+dt*0.55,0,100);
+      jugador.bateria=clamp(jugador.bateria+dt*C().recargaLinterna,0,100);
     }
     const bajo=jugador.bateria<22;
     const parp=bajo ? (Math.random()<0.06?0:1) : 1;
@@ -2310,7 +2642,7 @@ function loop(){
       risaT-=dt;
       if(risaT<=0){
         Audio3.risa(rnd(.25,.5), rnd(-1,1));
-        risaT=rnd(9,20);
+        risaT=rnd(C().risaMin,C().risaMax);
         if(Math.random()<.35) susurrar(["…contá hasta diez","estoy atrás tuyo","seguí caminando","¿jugás?"][Math.floor(Math.random()*4)], 3000);
       }
       // triggers
@@ -2323,6 +2655,7 @@ function loop(){
 
     /* --- backrooms --- */
     if(modo==="backrooms"){
+      if(C().flujo){ flujoT-=dt; if(flujoT<=0){ calcularFlujo(); flujoT=.35; } }
       moverEntidades(dt);
       const sx=c2w(salidaCelda.x), sz=c2w(salidaCelda.y);
       if(Math.hypot(jugador.pos.x-sx, jugador.pos.z-sz) < 1.2) entrarPlantaBaja();
@@ -2341,6 +2674,8 @@ function loop(){
       else el.style.opacity=0;
     } else $("accion").style.opacity=0;
   }
+
+  if(cine) correrCine(dt);
 
   renderer.render(scene,camera);
 }
