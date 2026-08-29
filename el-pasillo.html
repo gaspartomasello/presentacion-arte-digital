@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>LA DIMENSIÓN DESCONOCIDA — Escuela 16 D.E. 19</title>
+<style>
+  :root{
+    --tiza:#e8e4d9;
+    --gris:#8d979a;
+    --verde-salida:#2ecc71;
+    --amarillo:#d8c04a;
+    --sangre:#8b1a1a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden;background:#000;cursor:default;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--tiza)}
+  canvas{display:block}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+  #vig{position:absolute;inset:0;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 35%, rgba(0,0,0,.85) 100%)}
+  #bateria{position:absolute;left:18px;bottom:18px;width:120px}
+  #aguante{position:absolute;left:18px;bottom:52px;width:120px}
+  #aguante .lbl{font-size:10px;letter-spacing:.22em;opacity:.55;margin-bottom:5px}
+  #aguante .barra{height:6px;background:rgba(255,255,255,.12);overflow:hidden}
+  #aguante .llena{height:100%;width:100%;background:#cdd6c8;transition:width .1s linear}
+  #aguante.vacio .lbl{opacity:.9;color:#c98b8b}
+  #objetivo{position:absolute;left:18px;top:16px;font-size:11px;letter-spacing:.14em;
+    opacity:.75;text-shadow:0 0 10px #000;max-width:46ch;line-height:1.8}
+  #objetivo b{color:#f0ece0;font-weight:400}
+  #accion{position:absolute;left:50%;bottom:26%;transform:translateX(-50%);
+    font-size:12px;letter-spacing:.14em;opacity:0;transition:opacity .12s;
+    border:1px solid rgba(232,228,217,.28);padding:6px 14px;background:rgba(0,0,0,.35);
+    white-space:nowrap;text-shadow:0 0 8px #000}
+  #bateria .lbl{font-size:10px;letter-spacing:.22em;opacity:.55;margin-bottom:5px}
+  #bateria .barra{height:6px;background:rgba(255,255,255,.12);overflow:hidden}
+  #bateria .llena{height:100%;width:100%;background:var(--tiza);transition:width .2s linear}
+  #reloj{position:absolute;right:18px;bottom:18px;font-size:11px;letter-spacing:.2em;opacity:.5}
+  #susurro{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);
+    font-size:13px;letter-spacing:.12em;text-align:center;opacity:0;white-space:pre-line;
+    transition:opacity .8s ease;text-shadow:0 0 12px #000;max-width:80vw}
+  #susurro.on{opacity:.85}
+  #flash{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .45s linear}
+
+  /* ---------- Pantallas ---------- */
+  .pantalla{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:28px;
+    background:#05060a}
+  .pantalla.oculta{display:none}
+  .kicker{font-size:10px;letter-spacing:.5em;opacity:.4;margin-bottom:22px}
+  h1{font-size:clamp(38px,11vw,86px);font-weight:400;letter-spacing:.16em;
+     line-height:.95;margin-bottom:6px}
+  h1 span{display:block;font-size:.28em;letter-spacing:.55em;opacity:.45;margin-top:14px}
+  .teclas{margin:34px 0 30px;font-size:12px;opacity:.7;letter-spacing:.08em;
+    display:inline-block;text-align:left}
+  .teclas div{display:flex;align-items:center;gap:14px;margin:7px 0}
+  .teclas b{min-width:92px;text-align:center;border:1px solid rgba(232,228,217,.35);
+    padding:2px 8px;font-weight:400}
+  button{pointer-events:auto;font:inherit;font-size:12px;letter-spacing:.28em;
+    background:none;color:var(--tiza);border:1px solid rgba(232,228,217,.5);
+    padding:14px 34px;cursor:pointer;transition:.2s}
+  button:hover,button:focus{background:var(--tiza);color:#05060a;outline:none}
+  .nota{margin-top:26px;font-size:10px;opacity:.3;letter-spacing:.16em;max-width:420px;line-height:1.9}
+  #fin h1{color:var(--sangre)}
+  #ganaste h1{color:var(--verde-salida)}
+  #cargando{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+    background:#05060a;font-size:11px;letter-spacing:.4em;opacity:.6}
+
+  /* ---------- Selector de dificultad ---------- */
+  .modos{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .modos button{min-width:210px}
+  #jugarHard{border-color:rgba(139,26,26,.75);color:#e0b4b4}
+  #jugarHard:hover{background:#8b1a1a;color:#f2e8e8;border-color:#8b1a1a}
+  .modo-desc{margin-top:22px;font-size:10px;opacity:.42;letter-spacing:.14em;
+    line-height:2.2;max-width:560px}
+  .modo-desc b{color:#c98b8b;font-weight:400}
+  #modoTag{position:absolute;right:18px;top:16px;font-size:10px;letter-spacing:.3em;
+    color:#8b1a1a;opacity:.85;display:none}
+  #modoTag.on{display:block}
+
+  /* ---------- Acertijo del busto ---------- */
+  #acertijo{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;
+    background:rgba(4,5,8,.82);pointer-events:auto}
+  #acertijo.oculta{display:none}
+  #acertijo .marco{border:1px solid rgba(232,228,217,.35);padding:34px 44px;max-width:520px;
+    background:#07080c;text-align:center;box-shadow:0 0 60px rgba(120,20,20,.25)}
+  #acertijo .ktag{font-size:10px;letter-spacing:.5em;color:#8b1a1a;margin-bottom:20px}
+  #acertijo .preg{font-size:clamp(30px,6vw,48px);letter-spacing:.12em;margin-bottom:26px}
+  #acertijo .ops{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #acertijo .ops button{padding:12px 10px;font-size:14px;letter-spacing:.14em;width:100%}
+  #acertijo .ops button b{opacity:.45;margin-right:10px;font-weight:400}
+  #acertijo .cuenta{height:4px;background:rgba(255,255,255,.12);margin-top:22px}
+  #acertijo .cuenta i{display:block;height:100%;width:100%;background:#8b1a1a}
+  #acertijo .pista{font-size:10px;letter-spacing:.2em;opacity:.4;margin-top:14px}
+
+  /* ---------- Táctil ---------- */
+  #tactil{position:fixed;inset:0;z-index:8;display:none}
+  #tactil.on{display:block}
+  #stick{position:absolute;left:22px;bottom:22px;width:118px;height:118px;border-radius:50%;
+    border:1px solid rgba(232,228,217,.25);pointer-events:auto}
+  #stick i{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;
+    border-radius:50%;background:rgba(232,228,217,.2)}
+  #btnLuz{position:absolute;right:22px;bottom:34px;width:74px;height:74px;border-radius:50%;
+    border:1px solid rgba(232,228,217,.35);pointer-events:auto;font-size:9px;
+    letter-spacing:.14em;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<div id="cargando">CARGANDO…</div>
+
+<div id="hud">
+  <div id="vig"></div>
+  <div id="bateria"><div class="lbl">LINTERNA</div><div class="barra"><div class="llena" id="pila"></div></div></div>
+  <div id="aguante"><div class="lbl">AGUANTE</div><div class="barra"><div class="llena" id="stam"></div></div></div>
+  <div id="objetivo"></div>
+  <div id="accion"></div>
+  <div id="reloj">03:47:00</div>
+  <div id="modoTag">HARDCORE</div>
+  <div id="susurro"></div>
+  <div id="flash"></div>
+</div>
+
+<div id="tactil">
+  <div id="stick"><i></i></div>
+  <div id="btnLuz">LUZ</div>
+</div>
+
+<div id="acertijo" class="oculta">
+  <div class="marco">
+    <div class="ktag">EL BUSTO TE ESTÁ MIRANDO</div>
+    <div class="preg" id="preg"></div>
+    <div class="ops" id="ops"></div>
+    <div class="cuenta"><i id="cuentaBar"></i></div>
+    <div class="pista" id="pistaAcertijo">ELEGÍ CON 1 · 2 · 3 · 4 — TENÉS 10 SEGUNDOS</div>
+  </div>
+</div>
+
+<div class="pantalla" id="menu">
+  <div class="kicker">ESCUELA N.º 16 · DISTRITO ESCOLAR 19 — "WILLIAM MORRIS"</div>
+  <h1>LA DIMENSIÓN<span>DESCONOCIDA</span></h1>
+  <div class="teclas">
+    <div><b>W A S D</b>caminar</div>
+    <div><b>MOUSE</b>mirar</div>
+    <div><b>SHIFT</b>correr (gasta aguante)</div>
+    <div><b>F</b>linterna</div>
+    <div><b>E</b>revisar / usar</div>
+  </div>
+  <div class="modos">
+    <button id="jugarFacil">MODO FÁCIL</button>
+    <button id="jugarHard">MODO HARDCORE</button>
+  </div>
+  <div class="modo-desc">
+    FÁCIL — el colegio como lo conocés.<br>
+    <b>HARDCORE</b> — las dos cosas de las backrooms te buscan doblando esquinas, está más
+    oscuro, la linterna no se recupera sola y el busto te da la mitad del tiempo.
+  </div>
+  <div class="nota">Te quedaste adentro después de hora. El pasillo del primer piso, algo
+    que no debería existir debajo, y la planta baja con el portón cerrado con candado.
+    Usá auriculares.</div>
+</div>
+
+<div class="pantalla oculta" id="pausa">
+  <div class="kicker">EN PAUSA</div>
+  <h1>RESPIRÁ<span>03:47 AM</span></h1>
+  <button id="seguir">CONTINUAR</button>
+  <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;justify-content:center">
+    <button id="pantallaCompleta" style="padding:10px 22px;font-size:11px">PANTALLA COMPLETA</button>
+    <button id="volverEmpezar" style="padding:10px 22px;font-size:11px">EMPEZAR DE NUEVO</button>
+  </div>
+  <div class="nota">ESC suelta el mouse y pausa. El cursor vuelve solo.</div>
+</div>
+
+<div class="pantalla oculta" id="fin">
+  <div class="kicker">TE ENCONTRÓ</div>
+  <h1>NO CORRAS<span>EN EL PASILLO</span></h1>
+  <button id="reintentar">OTRA VEZ</button>
+</div>
+
+<div class="pantalla oculta" id="ganaste">
+  <div class="kicker">PORTÓN DE SALIDA — PLANTA BAJA</div>
+  <h1>SALISTE<span>consagró su vida a la niñez</span></h1>
+  <button id="devuelta">VOLVER A ENTRAR</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+
+/* ==========================================================
+   0. UTILIDADES
+   ========================================================== */
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const ri  = n=>Math.floor(Math.random()*n);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const $ = id=>document.getElementById(id);
+
+function lienzo(w,h){
+  const c=document.createElement("canvas"); c.width=w; c.height=h;
+  return [c, c.getContext("2d")];
+}
+function texDe(canvas, rx=1, ry=1, wrapY=true){
+  const t=new THREE.CanvasTexture(canvas);
+  t.wrapS=THREE.RepeatWrapping;
+  t.wrapT= wrapY?THREE.RepeatWrapping:THREE.ClampToEdgeWrapping;
+  t.repeat.set(rx,ry);
+  t.anisotropy=2;
+  return t;
+}
+function texPlana(canvas){   // cartel/plano: nítido, sin repetir
+  const t=new THREE.CanvasTexture(canvas);
+  t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
+  t.minFilter=THREE.LinearFilter; t.magFilter=THREE.LinearFilter;
+  t.generateMipmaps=false; t.anisotropy=4;
+  return t;
+}
+function ruido(ctx,w,h,cant,alpha,color){
+  for(let i=0;i<cant;i++){
+    ctx.fillStyle=color||`rgba(0,0,0,${Math.random()*alpha})`;
+    ctx.fillRect(Math.random()*w,Math.random()*h,Math.random()*3+1,Math.random()*3+1);
+  }
+}
+
+/* ==========================================================
+   1. TEXTURAS PROCEDURALES (nada externo, carga instantánea)
+   ========================================================== */
+function texPisoGranito(){   // granito pulido, baldosa grande con junta
+  const [c,x]=lienzo(256,256);
+  x.fillStyle="#cbc5b6"; x.fillRect(0,0,256,256);
+  for(let i=0;i<7000;i++){
+    const g=Math.random();
+    x.fillStyle = g<.40 ? "rgba(88,84,76,.55)"
+                : g<.72 ? "rgba(255,255,255,.55)"
+                : g<.90 ? "rgba(146,124,96,.45)"
+                        : "rgba(70,90,80,.30)";
+    const r=Math.random()<.15?3:2;
+    x.fillRect(Math.random()*256,Math.random()*256,r,r);
+  }
+  // junta de la baldosa
+  x.strokeStyle="rgba(96,93,86,.65)"; x.lineWidth=3; x.strokeRect(1.5,1.5,253,253);
+  x.strokeStyle="rgba(255,255,255,.18)"; x.lineWidth=1; x.strokeRect(4,4,248,248);
+  // brillo suave del pulido
+  const g=x.createLinearGradient(0,0,256,256);
+  g.addColorStop(0,"rgba(255,255,255,.06)"); g.addColorStop(.5,"rgba(0,0,0,0)");
+  g.addColorStop(1,"rgba(255,255,255,.05)");
+  x.fillStyle=g; x.fillRect(0,0,256,256);
+  return c;
+}
+function texPared(){ // blanco arriba, zócalo gris verdoso abajo (foto 1)
+  const [c,x]=lienzo(128,256);
+  const corte=Math.round(256*0.58);
+  x.fillStyle="#e7e4da"; x.fillRect(0,0,128,corte);
+  x.fillStyle="#99a5a4"; x.fillRect(0,corte,128,256-corte);
+  x.fillStyle="rgba(255,255,255,.42)"; x.fillRect(0,corte-4,128,4);   // filete blanco
+  x.fillStyle="rgba(0,0,0,.10)";      x.fillRect(0,corte,128,3);      // sombra bajo el filete
+  x.fillStyle="#7c8587"; x.fillRect(0,246,128,10);                    // zócalo oscuro
+  // chorreaduras y roces
+  for(let i=0;i<16;i++){
+    const px=Math.random()*128, an=1+Math.random()*3;
+    x.fillStyle=`rgba(120,120,110,${.03+Math.random()*.05})`;
+    x.fillRect(px,Math.random()*60,an,60+Math.random()*120);
+  }
+  for(let i=0;i<9;i++){
+    x.fillStyle=`rgba(60,66,64,${.05+Math.random()*.07})`;
+    x.beginPath(); x.ellipse(Math.random()*128, corte+Math.random()*90,
+      6+Math.random()*16, 3+Math.random()*7, 0, 0, 7); x.fill();
+  }
+  ruido(x,128,256,1200,.09);
+  return c;
+}
+function texTecho(){
+  const [c,x]=lienzo(128,128);
+  x.fillStyle="#e6e3da"; x.fillRect(0,0,128,128);
+  x.strokeStyle="rgba(150,148,140,.30)"; x.lineWidth=2;
+  x.strokeRect(1,1,126,126);
+  ruido(x,128,128,450,.07);
+  x.fillStyle="rgba(122,112,92,.10)";
+  x.beginPath(); x.arc(40,80,26,0,7); x.fill();
+  return c;
+}
+function texBandeja(){ // chapa galvanizada perforada de la bandeja portacables
+  const [c,x]=lienzo(128,64);
+  x.fillStyle="#a8aeb2"; x.fillRect(0,0,128,64);
+  x.fillStyle="rgba(255,255,255,.18)"; x.fillRect(0,0,128,6);
+  x.fillStyle="rgba(0,0,0,.22)"; x.fillRect(0,58,128,6);
+  for(let i=4;i<128;i+=11){                       // ranuras
+    x.fillStyle="rgba(40,44,48,.55)"; x.fillRect(i,18,5,28);
+    x.fillStyle="rgba(255,255,255,.10)"; x.fillRect(i,16,5,2);
+  }
+  ruido(x,128,64,200,.10);
+  return c;
+}
+function texTablero(){ // frente del tablero eléctrico crema (foto 1, pared izquierda)
+  const [c,x]=lienzo(128,256);
+  x.fillStyle="#d8d2bf"; x.fillRect(0,0,128,256);
+  x.strokeStyle="rgba(90,86,72,.45)"; x.lineWidth=3; x.strokeRect(6,6,116,244);
+  x.fillStyle="rgba(255,255,255,.25)"; x.fillRect(9,9,110,3);
+  x.fillStyle="rgba(70,66,56,.35)"; x.fillRect(60,10,3,236);    // junta de puertas
+  x.fillStyle="#8d8878"; x.fillRect(66,120,10,26);              // manija
+  x.fillStyle="#b03a2e"; x.fillRect(20,26,7,7);                 // pilotos
+  x.fillStyle="#d9a441"; x.fillRect(31,26,7,7);
+  x.fillStyle="#e9e6dd"; x.fillRect(78,30,34,16);               // etiqueta
+  ruido(x,128,256,500,.10);
+  return c;
+}
+function texCartelera(){ // la cartelera de trabajos del pasillo (foto 1)
+  const [c,x]=lienzo(512,320); x.scale(2,2);
+  x.fillStyle="#6d5a3a"; x.fillRect(0,0,256,160);           // marco de madera
+  x.fillStyle="#3e4a35"; x.fillRect(7,7,242,146);           // fondo verde
+  const cols=["#8cc63f","#c9d94a","#4aa3c9","#d98b4a","#b64a7a","#4ac98b","#e0c341"];
+  for(let i=0;i<7;i++)for(let j=0;j<4;j++){
+    const px=12+i*34, py=12+j*35;
+    x.fillStyle=cols[(i*3+j)%cols.length];
+    x.globalAlpha=.78+Math.random()*.22;
+    x.fillRect(px,py,28,30);
+    x.globalAlpha=1;
+    x.strokeStyle="rgba(0,0,0,.25)"; x.lineWidth=1; x.strokeRect(px+.5,py+.5,27,29);
+    x.fillStyle="rgba(255,255,255,.35)";                     // garabatos
+    for(let k=0;k<3;k++) x.fillRect(px+4+Math.random()*16, py+5+Math.random()*20, 2+Math.random()*8, 2);
+    x.fillStyle="#d9d5c8"; x.fillRect(px+11,py-2,6,4);       // chinche/cinta
+  }
+  ruido(x,256,160,300,.10);
+  return c;
+}
+function texCartel(txt, fondo="#1f6b3a", tinta="#eaf6ee", tam=54){
+  const [c,x]=lienzo(1024,256); x.scale(2,2);
+  x.fillStyle=fondo; x.fillRect(0,0,512,128);
+  x.strokeStyle="rgba(255,255,255,.25)"; x.lineWidth=4; x.strokeRect(6,6,500,116);
+  x.fillStyle=tinta; x.font=`${tam}px ui-monospace, monospace`;
+  x.textAlign="center"; x.textBaseline="middle";
+  const lineas=String(txt).split("\n");
+  lineas.forEach((l,i)=> x.fillText(l, 256, 68 + (i-(lineas.length-1)/2)*(tam*1.25)));
+  ruido(x,512,128,300,.10);
+  return c;
+}
+function texPlanoEvacuacion(){ // el plano del piso 1 colgado en la pared
+  const [c,x]=lienzo(1024,600); x.scale(2,2);
+  x.fillStyle="#e9e6dd"; x.fillRect(0,0,512,300);
+  // encabezado
+  x.fillStyle="#3b3b38"; x.fillRect(0,0,512,30);
+  x.fillStyle="#e9e6dd"; x.font="13px ui-monospace, monospace"; x.textBaseline="middle";
+  x.fillText("AVDA. LAFUENTE 2670 — PISO 1", 44, 15);
+  x.fillStyle="#8d8d86"; x.fillRect(6,4,30,22);
+  x.fillStyle="#e9e6dd"; x.font="16px ui-monospace, monospace"; x.fillText("1", 17, 15);
+  x.fillStyle="#c0392b"; x.font="11px ui-monospace, monospace";
+  x.textAlign="right"; x.fillText("911 · 100 · 101 · 107", 500, 15); x.textAlign="left";
+  // planta: aulas en naranja
+  x.fillStyle="#e8c78f";
+  x.fillRect(60,58,392,180);
+  // patio a la izquierda
+  x.fillStyle="#dfd7c2"; x.fillRect(60,58,96,180);
+  x.fillStyle="#9fc6a8"; x.fillRect(62,180,92,56);          // casero
+  // muros
+  x.strokeStyle="#15150f"; x.lineWidth=5;
+  x.strokeRect(60,58,392,180);
+  x.beginPath();
+  [156,214,262,310,358,406].forEach(px=>{ x.moveTo(px,58); x.lineTo(px,124); x.moveTo(px,172); x.lineTo(px,238); });
+  x.moveTo(156,124); x.lineTo(452,124);                      // pared norte del pasillo
+  x.moveTo(156,172); x.lineTo(452,172);                      // pared sur del pasillo
+  x.stroke();
+  // escaleras
+  x.fillStyle="#cfcabb"; x.fillRect(216,60,44,62); x.fillRect(360,60,44,62); x.fillRect(360,174,44,62);
+  x.strokeStyle="#7d7a70"; x.lineWidth=2;
+  for(let i=0;i<6;i++){ x.beginPath(); x.moveTo(218,66+i*9); x.lineTo(258,66+i*9);
+                        x.moveTo(362,66+i*9); x.lineTo(402,66+i*9);
+                        x.moveTo(362,180+i*9); x.lineTo(402,180+i*9); x.stroke(); }
+  // rótulos
+  x.fillStyle="#15150f"; x.font="13px ui-monospace, monospace"; x.textAlign="center";
+  x.fillText("PATIO", 108, 140); x.fillText("BIBLIOTECA", 310, 92); x.fillText("CASERO", 108, 210);
+  x.font="26px ui-monospace, monospace"; x.fillStyle="rgba(21,21,15,.35)";
+  x.fillText("S1", 96, 76);
+  // recorrido de evacuación (amarillo punteado)
+  x.strokeStyle="#e8d44a"; x.lineWidth=7; x.setLineDash([9,7]);
+  x.beginPath(); x.moveTo(178,148); x.lineTo(392,148); x.lineTo(392,178); x.stroke();
+  x.setLineDash([]);
+  // "UD. ESTÁ AQUÍ"
+  x.fillStyle="#2f7d32"; x.beginPath(); x.arc(178,148,20,0,7); x.fill();
+  x.fillStyle="#c0392b"; x.beginPath(); x.arc(178,148,14,0,7); x.fill();
+  x.fillStyle="#fff"; x.font="8px ui-monospace, monospace";
+  x.fillText("UD. ESTÁ", 178, 145); x.fillText("AQUÍ", 178, 154);
+  // carteles SALIDA
+  x.fillStyle="#2ecc71"; x.font="9px ui-monospace, monospace";
+  [[238,128],[392,178],[452,124]].forEach(([px,py])=>{ x.fillRect(px-16,py-6,32,12);
+    x.fillStyle="#0b2a16"; x.fillText("SALIDA",px,py); x.fillStyle="#2ecc71"; });
+  x.textAlign="left";
+  ruido(x,512,300,500,.06);
+  return c;
+}
+function texParedPB(){   // planta baja: blanco arriba, zócalo gris
+  const [c,x]=lienzo(128,256);
+  const corte=Math.round(256*0.55);
+  x.fillStyle="#eeece4"; x.fillRect(0,0,128,corte);
+  x.fillStyle="#a9aeb0"; x.fillRect(0,corte,128,256-corte);
+  x.fillStyle="rgba(255,255,255,.45)"; x.fillRect(0,corte-4,128,4);
+  x.fillStyle="rgba(0,0,0,.10)";       x.fillRect(0,corte,128,3);
+  x.fillStyle="#d9d6cd"; x.fillRect(0,244,128,12);         // zócalo de mármol
+  for(let i=0;i<12;i++){
+    x.fillStyle=`rgba(120,120,112,${.03+Math.random()*.05})`;
+    x.fillRect(Math.random()*128, Math.random()*70, 1+Math.random()*3, 70+Math.random()*130);
+  }
+  ruido(x,128,256,900,.08);
+  return c;
+}
+function texVidrioRet(){ // vidrio armado con malla, como las ventanas del hall
+  const [c,x]=lienzo(128,128);
+  const g=x.createLinearGradient(0,0,0,128);
+  g.addColorStop(0,"#cfd6d2"); g.addColorStop(1,"#9fa9a6");
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  x.strokeStyle="rgba(90,96,92,.45)"; x.lineWidth=1;
+  for(let i=0;i<128;i+=8){
+    x.beginPath(); x.moveTo(i,0); x.lineTo(i,128); x.stroke();
+    x.beginPath(); x.moveTo(0,i); x.lineTo(128,i); x.stroke();
+  }
+  ruido(x,128,128,200,.05);
+  return c;
+}
+function texAfiche(){   // carteleras del hall
+  const [c,x]=lienzo(512,320); x.scale(2,2);
+  x.fillStyle="#dcd8cc"; x.fillRect(0,0,256,160);
+  const cols=["#e4d24a","#7fc4e8","#e8a0c0","#a8dd8a","#f0f0e6","#e8b25a"];
+  for(let i=0;i<4;i++)for(let j=0;j<2;j++){
+    const px=8+i*62, py=8+j*74;
+    x.fillStyle=cols[(i+j*3)%cols.length]; x.fillRect(px,py,56,68);
+    x.strokeStyle="rgba(0,0,0,.2)"; x.strokeRect(px+.5,py+.5,55,67);
+    x.fillStyle="rgba(40,40,40,.55)";
+    for(let k=0;k<5;k++) x.fillRect(px+6, py+10+k*10, 20+Math.random()*28, 3);
+    x.fillStyle="rgba(200,40,40,.8)"; x.fillRect(px+6,py+4,34,4);
+  }
+  ruido(x,256,160,260,.08);
+  return c;
+}
+function texBanner(){   // los telones negros con trabajos colgados
+  const [c,x]=lienzo(256,512);
+  x.fillStyle="#141414"; x.fillRect(0,0,256,512);
+  const cols=["#e8e2d0","#d8b23a","#c85a3a","#8fb4d8","#b9d86a","#e0e0e0"];
+  for(let i=0;i<26;i++){
+    x.save();
+    x.translate(30+Math.random()*196, 40+Math.random()*430);
+    x.rotate((Math.random()-.5)*1.2);
+    x.fillStyle=cols[Math.floor(Math.random()*cols.length)];
+    x.globalAlpha=.85;
+    const w=14+Math.random()*34, h=14+Math.random()*30;
+    if(Math.random()<.5) x.fillRect(-w/2,-h/2,w,h);
+    else { x.beginPath(); x.ellipse(0,0,w/2,h/2,0,0,7); x.fill(); }
+    x.restore();
+  }
+  x.globalAlpha=1;
+  ruido(x,256,512,600,.14);
+  return c;
+}
+function texMarmol(){
+  const [c,x]=lienzo(128,128);
+  x.fillStyle="#ddd8c8"; x.fillRect(0,0,128,128);
+  for(let i=0;i<14;i++){
+    x.strokeStyle=`rgba(150,142,124,${.12+Math.random()*.2})`;
+    x.lineWidth=1+Math.random()*2;
+    x.beginPath(); x.moveTo(Math.random()*128,0);
+    x.bezierCurveTo(Math.random()*128,42,Math.random()*128,86,Math.random()*128,128);
+    x.stroke();
+  }
+  ruido(x,128,128,700,.08);
+  return c;
+}
+function texPedestal(){   // la leyenda grabada del pedestal (foto del busto)
+  const [c,x]=lienzo(512,768); x.scale(2,2);
+  x.fillStyle="#ddd8c8"; x.fillRect(0,0,256,384);
+  for(let i=0;i<18;i++){
+    x.strokeStyle=`rgba(150,142,124,${.10+Math.random()*.18})`;
+    x.lineWidth=1+Math.random()*2;
+    x.beginPath(); x.moveTo(Math.random()*256,0);
+    x.bezierCurveTo(Math.random()*256,128,Math.random()*256,256,Math.random()*256,384);
+    x.stroke();
+  }
+  x.fillStyle="#8a7c4a"; x.fillRect(96,26,64,26);          // chapita de bronce
+  x.fillStyle="rgba(60,54,30,.6)";
+  for(let i=0;i<3;i++) x.fillRect(102,32+i*7,52,2);
+  x.textAlign="center"; x.fillStyle="#4a4536";
+  const linea=(t,y,tam)=>{ x.font=tam+"px ui-monospace, monospace"; x.fillText(t,128,y); };
+  linea("WILLIAM C. MORRIS",84,17);
+  linea("1864 - 1932",118,17);
+  linea("CONSAGRÓ",190,16);
+  linea("SU VIDA",222,16);
+  linea("A LA NIÑEZ",254,16);
+  x.strokeStyle="rgba(255,255,255,.35)"; x.lineWidth=1;
+  x.beginPath(); x.moveTo(20,300); x.lineTo(236,300); x.stroke();
+  ruido(x,256,384,500,.06);
+  return c;
+}
+function texPapelBackroom(){ // empapelado mostaza
+  const [c,x]=lienzo(256,256);
+  x.fillStyle="#c9ac4e"; x.fillRect(0,0,256,256);
+  for(let i=0;i<256;i+=16){
+    x.fillStyle= (i/16)%2? "rgba(160,132,50,.30)":"rgba(226,200,120,.22)";
+    x.fillRect(i,0,8,256);
+  }
+  for(let i=0;i<26;i++){ // humedad
+    x.fillStyle=`rgba(110,84,32,${Math.random()*.16})`;
+    x.beginPath(); x.arc(Math.random()*256,Math.random()*256,rnd(10,44),0,7); x.fill();
+  }
+  ruido(x,256,256,2200,.10);
+  return c;
+}
+function texAlfombra(){
+  const [c,x]=lienzo(128,128);
+  x.fillStyle="#8a7a44"; x.fillRect(0,0,128,128);
+  ruido(x,128,128,4000,.30);
+  for(let i=0;i<14;i++){
+    x.fillStyle=`rgba(60,48,20,${Math.random()*.2})`;
+    x.beginPath(); x.arc(Math.random()*128,Math.random()*128,rnd(6,22),0,7); x.fill();
+  }
+  return c;
+}
+
+/* ==========================================================
+   2. AUDIO — todo sintetizado con WebAudio (0 archivos)
+   ========================================================== */
+const Audio3 = {
+  ac:null, master:null, rev:null, drone:null, listo:false,
+  init(){
+    if(this.listo) return;
+    const AC = window.AudioContext||window.webkitAudioContext;
+    if(!AC) return;
+    this.ac = new AC();
+    this.master = this.ac.createGain(); this.master.gain.value=.9;
+    this.master.connect(this.ac.destination);
+
+    // reverb de pasillo (impulso de ruido decreciente)
+    const dur=2.2, sr=this.ac.sampleRate;
+    const buf=this.ac.createBuffer(2, sr*dur, sr);
+    for(let ch=0;ch<2;ch++){
+      const d=buf.getChannelData(ch);
+      for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.6);
+    }
+    this.rev=this.ac.createConvolver(); this.rev.buffer=buf;
+    const wet=this.ac.createGain(); wet.gain.value=.55;
+    this.rev.connect(wet).connect(this.master);
+    this.listo=true;
+    this.zumbido();
+  },
+  bus(seco=.7, mojado=.5){
+    const g=this.ac.createGain();
+    const s=this.ac.createGain(); s.gain.value=seco;
+    const m=this.ac.createGain(); m.gain.value=mojado;
+    g.connect(s).connect(this.master);
+    g.connect(m).connect(this.rev);
+    return g;
+  },
+  zumbido(){ // drone grave permanente
+    const g=this.ac.createGain(); g.gain.value=0; g.connect(this.master);
+    const f=this.ac.createBiquadFilter(); f.type="lowpass"; f.frequency.value=170; f.connect(g);
+    [41,41.7,82.3].forEach((hz,i)=>{
+      const o=this.ac.createOscillator();
+      o.type= i===2?"triangle":"sawtooth"; o.frequency.value=hz;
+      const og=this.ac.createGain(); og.gain.value= i===2?.18:.5;
+      o.connect(og).connect(f); o.start();
+    });
+    // LFO de respiración
+    const lfo=this.ac.createOscillator(); lfo.frequency.value=.07;
+    const lg=this.ac.createGain(); lg.gain.value=60;
+    lfo.connect(lg).connect(f.frequency); lfo.start();
+    g.gain.linearRampToValueAtTime(.16, this.ac.currentTime+4);
+    this.drone=g;
+  },
+  nivelDrone(v){ if(this.drone) this.drone.gain.setTargetAtTime(v,this.ac.currentTime,1.2); },
+
+  risa(vol=.5, pan=0){ // risa de nene: pulsos con formantes
+    if(!this.listo) return;
+    const t0=this.ac.currentTime, n=4+Math.floor(Math.random()*5);
+    const out=this.bus(.5,.9); out.gain.value=vol;
+    let dst=out;
+    if(this.ac.createStereoPanner){
+      const p=this.ac.createStereoPanner(); p.pan.value=clamp(pan,-1,1);
+      p.connect(out); dst=p;
+    }
+    for(let i=0;i<n;i++){
+      const t=t0+i*rnd(.115,.155);
+      const base=rnd(400,520)-i*9;
+      const o=this.ac.createOscillator(); o.type="sawtooth";
+      o.frequency.setValueAtTime(base,t);
+      o.frequency.exponentialRampToValueAtTime(base*.72,t+.11);
+      const f1=this.ac.createBiquadFilter(); f1.type="bandpass"; f1.frequency.value=rnd(760,980); f1.Q.value=6;
+      const f2=this.ac.createBiquadFilter(); f2.type="bandpass"; f2.frequency.value=rnd(1700,2300); f2.Q.value=8;
+      const g=this.ac.createGain();
+      g.gain.setValueAtTime(.0001,t);
+      g.gain.exponentialRampToValueAtTime(.55,t+.02);
+      g.gain.exponentialRampToValueAtTime(.0008,t+.13);
+      o.connect(f1).connect(f2).connect(g).connect(dst);
+      o.start(t); o.stop(t+.16);
+    }
+  },
+  paso(){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.35,.5);
+    const src=this.ac.createBufferSource();
+    const b=this.ac.createBuffer(1,1400,this.ac.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    src.buffer=b;
+    const f=this.ac.createBiquadFilter(); f.type="bandpass"; f.frequency.value=rnd(900,1500); f.Q.value=1.2;
+    const g=this.ac.createGain(); g.gain.value=.22;
+    src.connect(f).connect(g).connect(out); src.start(t);
+  },
+  chispazo(vol=.25){ // fluorescente que parpadea
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.6,.4);
+    const o=this.ac.createOscillator(); o.type="square"; o.frequency.value=rnd(90,140);
+    const g=this.ac.createGain();
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0005,t+rnd(.05,.16));
+    const f=this.ac.createBiquadFilter(); f.type="highpass"; f.frequency.value=600;
+    o.connect(f).connect(g).connect(out); o.start(t); o.stop(t+.2);
+  },
+  latido(v=.5){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.9,.15);
+    [0,.22].forEach((off,i)=>{
+      const o=this.ac.createOscillator(); o.type="sine";
+      o.frequency.setValueAtTime(72,t+off);
+      o.frequency.exponentialRampToValueAtTime(38,t+off+.14);
+      const g=this.ac.createGain();
+      g.gain.setValueAtTime(.0001,t+off);
+      g.gain.exponentialRampToValueAtTime(v*(i?.6:1),t+off+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+off+.2);
+      o.connect(g).connect(out); o.start(t+off); o.stop(t+off+.25);
+    });
+  },
+  grito(){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.8,.7);
+    const o=this.ac.createOscillator(); o.type="sawtooth";
+    o.frequency.setValueAtTime(1100,t);
+    o.frequency.exponentialRampToValueAtTime(180,t+1.1);
+    const n=this.ac.createBufferSource();
+    const b=this.ac.createBuffer(1,this.ac.sampleRate,this.ac.sampleRate);
+    const d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    n.buffer=b;
+    const nf=this.ac.createBiquadFilter(); nf.type="bandpass"; nf.frequency.value=1800; nf.Q.value=1;
+    const g=this.ac.createGain();
+    g.gain.setValueAtTime(.7,t); g.gain.exponentialRampToValueAtTime(.001,t+1.2);
+    o.connect(g); n.connect(nf).connect(g); g.connect(out);
+    o.start(t); o.stop(t+1.2); n.start(t); n.stop(t+1.2);
+  },
+  jadeo(fase){          // el personaje sin aire
+    if(!this.listo) return;
+    const t=this.ac.currentTime, dur=fase?.55:.42, out=this.bus(.85,.25);
+    const src=this.ac.createBufferSource();
+    const b=this.ac.createBuffer(1, this.ac.sampleRate*dur, this.ac.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++){
+      const k=i/d.length;
+      const env=fase? Math.sin(Math.PI*k)**1.5 : Math.pow(1-k,1.4)*Math.min(1,k*14);
+      d[i]=(Math.random()*2-1)*env;
+    }
+    src.buffer=b;
+    const f=this.ac.createBiquadFilter(); f.type="bandpass"; f.Q.value=1.1;
+    f.frequency.setValueAtTime(fase?420:900,t);
+    f.frequency.linearRampToValueAtTime(fase?820:380,t+dur);
+    const g=this.ac.createGain(); g.gain.value=fase?.42:.34;
+    src.connect(f).connect(g).connect(out); src.start(t);
+  },
+  papel(){
+    if(!this.listo) return;
+    for(let i=0;i<3;i++) setTimeout(()=>this.ruidito(rnd(2600,4200),.09,.9),i*70);
+  },
+  ruidito(freq,vol,q){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.6,.35);
+    const src=this.ac.createBufferSource();
+    const b=this.ac.createBuffer(1,2600,this.ac.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    src.buffer=b;
+    const f=this.ac.createBiquadFilter(); f.type="bandpass"; f.frequency.value=freq; f.Q.value=q||1;
+    const g=this.ac.createGain(); g.gain.value=vol;
+    src.connect(f).connect(g).connect(out); src.start(t);
+  },
+  metal(){ this.ruidito(rnd(1800,2600),.18,3); setTimeout(()=>this.ruidito(rnd(1400,2000),.12,4),90); },
+  termica(){           // la llave térmica del tablero
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.8,.5);
+    const o=this.ac.createOscillator(); o.type="square"; o.frequency.setValueAtTime(180,t);
+    o.frequency.exponentialRampToValueAtTime(60,t+.12);
+    const g=this.ac.createGain(); g.gain.setValueAtTime(.2,t);
+    g.gain.exponentialRampToValueAtTime(.0005,t+.16);
+    o.connect(g).connect(out); o.start(t); o.stop(t+.2);
+    this.ruidito(1200,.16,2);
+    setTimeout(()=>this.chispazo(.2),140);
+  },
+  thumpPiedra(){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.8,.6);
+    const o=this.ac.createOscillator(); o.type="sine";
+    o.frequency.setValueAtTime(90,t); o.frequency.exponentialRampToValueAtTime(38,t+.22);
+    const g=this.ac.createGain(); g.gain.setValueAtTime(.0001,t);
+    g.gain.exponentialRampToValueAtTime(.34,t+.012);
+    g.gain.exponentialRampToValueAtTime(.0004,t+.5);
+    o.connect(g).connect(out); o.start(t); o.stop(t+.55);
+    this.ruidito(700,.16,1.6);
+  },
+  campana(){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.5,1.0);
+    [784,1176,1568,2350].forEach((hz,i)=>{
+      const o=this.ac.createOscillator(); o.type="sine"; o.frequency.value=hz*(1+i*.002);
+      const g=this.ac.createGain();
+      g.gain.setValueAtTime(.0001,t);
+      g.gain.exponentialRampToValueAtTime(.16/(i+1),t+.008);
+      g.gain.exponentialRampToValueAtTime(.0004,t+2.6-i*.4);
+      o.connect(g).connect(out); o.start(t); o.stop(t+2.8);
+    });
+  },
+  puerta(){
+    if(!this.listo) return;
+    const t=this.ac.currentTime, out=this.bus(.7,.8);
+    const o=this.ac.createOscillator(); o.type="sawtooth";
+    o.frequency.setValueAtTime(240,t); o.frequency.linearRampToValueAtTime(90,t+.9);
+    const f=this.ac.createBiquadFilter(); f.type="lowpass"; f.frequency.value=800;
+    const g=this.ac.createGain(); g.gain.setValueAtTime(.16,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+1);
+    o.connect(f).connect(g).connect(out); o.start(t); o.stop(t+1);
+  }
+};
+
+/* ==========================================================
+   3. RENDER, ESCENA, CÁMARA
+   ========================================================== */
+const renderer = new THREE.WebGLRenderer({antialias:false, powerPreference:"high-performance"});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, 0.06, 90);
+camera.rotation.order = "YXZ";
+scene.add(camera);
+
+const ambiente = new THREE.AmbientLight(0x22303f, 0.14);
+scene.add(ambiente);
+
+// LINTERNA
+const linterna = new THREE.SpotLight(0xffeec8, 2.6, 30, Math.PI/7.5, .45, 1.1);
+linterna.position.set(.18,-.12,0);
+camera.add(linterna);
+linterna.target.position.set(.18,-.12,-1);
+camera.add(linterna.target);
+const halo = new THREE.PointLight(0xffe0b0, .45, 4.5);
+camera.add(halo);
+
+/* ==========================================================
+   4. MUNDO A — EL PASILLO DE LA ESCUELA
+   ========================================================== */
+const ANCHO = 3.8, ALTO = 3.35, LARGO = 46;     // pasillo (medidas de la foto)
+const Z_FONDO = -LARGO + 1, Z_ATRAS = 1.0;      // extremos
+const SALA = {x1:-2.5, x2:2.5, z1:1.0, z2:7.2};  // hall del ascensor (foto 3)
+const MX = ANCHO/2;                              // pared izquierda/derecha
+
+const mundoPasillo = new THREE.Group();
+scene.add(mundoPasillo);
+
+const matPiso   = new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(), 7, 84),
+                                               shininess:24, specular:0x24261f});
+const matPared  = new THREE.MeshLambertMaterial({map:texDe(texPared(), 16, 1, false)});
+const matTecho  = new THREE.MeshLambertMaterial({map:texDe(texTecho(), 5, 36)});
+const matMetal  = new THREE.MeshLambertMaterial({color:0x9aa0a4});
+const matGalva  = new THREE.MeshLambertMaterial({map:texDe(texBandeja(), 10, 1)});
+const matOscuro = new THREE.MeshLambertMaterial({color:0x2b2f33});
+const matRojo   = new THREE.MeshLambertMaterial({color:0x8e1b16});
+const matRojoV  = new THREE.MeshLambertMaterial({color:0xa8281c});
+const matBlanco = new THREE.MeshLambertMaterial({color:0xeceae0});
+const matCrema  = new THREE.MeshLambertMaterial({color:0xd8d2bf});
+const matMadera = new THREE.MeshLambertMaterial({color:0xb3afa2});   // puertas gris claro
+
+function caja(w,h,d,mat,x,y,z,padre){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); (padre||mundoPasillo).add(m); return m;
+}
+function plano(w,h,mat,x,y,z,rx,ry,padre){
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h), mat);
+  m.position.set(x,y,z); m.rotation.set(rx||0, ry||0, 0);
+  (padre||mundoPasillo).add(m); return m;
+}
+const luces = [];
+
+/* muchas piezas iguales (ménsulas, barrotes, hojas de puerta) en una sola llamada
+   de dibujo: baja de ~500 draw calls a ~150 sin cambiar nada visual */
+function instancias(geo, mat, lista){
+  const m=new THREE.InstancedMesh(geo, mat, lista.length);
+  const d=new THREE.Object3D();
+  lista.forEach((it,i)=>{
+    d.position.set(it[0],it[1],it[2]);
+    d.rotation.set(it[3]||0, it[4]||0, it[5]||0);
+    d.updateMatrix(); m.setMatrixAt(i, d.matrix);
+  });
+  m.instanceMatrix.needsUpdate=true;
+  mundoPasillo.add(m);
+  return m;
+}
+
+/* ---------- caja del pasillo ---------- */
+plano(ANCHO, LARGO, matPiso,  0, 0,    (Z_ATRAS+Z_FONDO)/2, -Math.PI/2, 0);
+plano(ANCHO, LARGO, matTecho, 0, ALTO, (Z_ATRAS+Z_FONDO)/2,  Math.PI/2, 0);
+plano(LARGO, ALTO, matPared, -MX, ALTO/2, (Z_ATRAS+Z_FONDO)/2, 0,  Math.PI/2);
+plano(LARGO, ALTO, matPared,  MX, ALTO/2, (Z_ATRAS+Z_FONDO)/2, 0, -Math.PI/2);
+
+/* ---------- puertas del fondo, con la luz del día atrás (foto 1) ---------- */
+(function fondo(){
+  const z=Z_FONDO;
+  caja(ANCHO, ALTO, .3, matPared, 0, ALTO/2, z-.15);
+  const vidrio=new THREE.MeshBasicMaterial({color:0xdfe8ee});
+  caja(1.9, 2.15, .05, vidrio, 0, 1.15, z-.02);            // hojas vidriadas
+  caja(1.9, .52, .05, vidrio, 0, 2.52, z-.02);             // banderola
+  caja(2.16, .1, .13, matBlanco, 0, 2.30, z-.05);
+  caja(2.16, .1, .13, matBlanco, 0, 2.84, z-.05);
+  caja(.1, 2.9, .13, matBlanco, -1.03, 1.5, z-.05);
+  caja(.1, 2.9, .13, matBlanco,  1.03, 1.5, z-.05);
+  caja(.05, 2.2, .1, matBlanco, 0, 1.15, z-.06);           // junta central
+  [-.18,.18].forEach(dx=> caja(.05,.5,.06, matMetal, dx, 1.05, z-.08));
+  plano(.52,.17, new THREE.MeshBasicMaterial({map:texPlana(texCartel("SALIDA","#1f8a4c","#f2fff6",58))}),
+        0, 3.05, z-.06);
+  const l=new THREE.PointLight(0xa9c8dc, 1.7, 15); l.position.set(0,1.9,z+1.3);
+  mundoPasillo.add(l);
+})();
+
+/* ---------- pared de atrás con el vano al hall del ascensor (foto 3) ---------- */
+caja((ANCHO-1.05)/2, ALTO, .3, matPared, -(ANCHO+1.05)/4, ALTO/2, Z_ATRAS+.15);
+caja((ANCHO-1.05)/2, ALTO, .3, matPared,  (ANCHO+1.05)/4, ALTO/2, Z_ATRAS+.15);
+caja(1.1, ALTO-2.3, .3, matPared, 0, ALTO-(ALTO-2.3)/2, Z_ATRAS+.15);
+caja(.14,2.36,.36, matBlanco, -.60, 1.18, Z_ATRAS+.15);        // marco grueso pintado
+caja(.14,2.36,.36, matBlanco,  .60, 1.18, Z_ATRAS+.15);
+caja(1.34,.14,.36, matBlanco, 0, 2.33, Z_ATRAS+.15);
+caja(.06,2.2,.05, matBlanco, .52, 1.15, Z_ATRAS-.08);          // hoja abierta contra la pared
+for(let i=0;i<7;i++) caja(.05,.05,.5, matBlanco, .52, .35+i*.29, Z_ATRAS-.32);   // reja de la hoja
+
+/* ---------- BANDEJAS PORTACABLES + MÉNSULAS (el detalle de la foto) ---------- */
+(function bandejas(){
+  const y=ALTO-.62;
+  const tramos=[], mens=[], riost=[], perf=[], tens=[];
+  [-1,1].forEach(lado=>{
+    const xp=lado*MX;
+    for(let z=Z_ATRAS-.6; z>Z_FONDO+.6; z-=6.0) tramos.push([xp-lado*.30, y, z-3.0]);
+    for(let z=Z_ATRAS-.8; z>Z_FONDO+.6; z-=1.45){
+      mens .push([xp-lado*.28, y-.05, z]);
+      riost.push([xp-lado*.16, y-.20, z, 0,0, lado*0.72]);
+      perf .push([xp-lado*.03, y+.13, z]);
+    }
+    for(let z=Z_ATRAS-2.2; z>Z_FONDO+.6; z-=4.35) tens.push([xp-lado*.46, ALTO-.32, z]);
+  });
+  instancias(new THREE.BoxGeometry(.46,.05,6.0), matGalva, tramos);   // tramos de bandeja
+  instancias(new THREE.BoxGeometry(.56,.05,.05), matMetal, mens);     // ménsulas
+  instancias(new THREE.BoxGeometry(.42,.04,.04), matMetal, riost);    // riostras
+  instancias(new THREE.BoxGeometry(.05,.30,.05), matMetal, perf);     // perfiles verticales
+  instancias(new THREE.BoxGeometry(.02,.62,.02), matMetal, tens);     // tensores al techo
+})();
+// bandeja que cruza el techo en la boca del pasillo
+caja(ANCHO-.5,.05,.44, matGalva, 0, ALTO-.28, Z_ATRAS-1.15);
+[-1,1].forEach(l=> caja(.02,.28,.02, matMetal, l*(MX-.5), ALTO-.14, Z_ATRAS-1.15));
+
+/* ---------- caño rojo de incendio + bajadas ---------- */
+caja(.13,.13,LARGO-2.4, matRojo, MX-.42, ALTO-.32, (Z_ATRAS+Z_FONDO)/2);
+[-4.2,-19.5,-34.0].forEach(z=>{
+  caja(.12,2.1,.12, matRojo, MX-.42, 1.35, z);                 // bajada vertical
+  caja(.2,.2,.2,   matRojo, MX-.42, 2.36, z);                  // codo
+});
+
+/* ---------- LUCES DEL TECHO: panel cuadrado + tubos ---------- */
+const matPanel = ()=> new THREE.MeshBasicMaterial({color:0xf6f2e2});
+let iLuz=0;
+for(let z=Z_ATRAS-2.0; z>Z_FONDO+1.5; z-=5.0){
+  const cuadrado = (iLuz%2===0);
+  const panel = cuadrado
+    ? plano(1.15,1.15, matPanel(), 0, ALTO-.02, z, Math.PI/2, 0)
+    : plano(1.30,.28,  matPanel(), 0, ALTO-.10, z, Math.PI/2, 0);
+  if(cuadrado){                                                 // marco del artefacto
+    caja(1.3,.06,.1, matBlanco, 0, ALTO-.05, z-.62);
+    caja(1.3,.06,.1, matBlanco, 0, ALTO-.05, z+.62);
+    caja(.1,.06,1.3, matBlanco, -.62, ALTO-.05, z);
+    caja(.1,.06,1.3, matBlanco,  .62, ALTO-.05, z);
+  } else {                                                      // tubo colgado de varillas
+    caja(1.34,.09,.32, matBlanco, 0, ALTO-.14, z);
+    [-.5,.5].forEach(dx=> caja(.015,.14,.015, matMetal, dx, ALTO-.07, z));
+  }
+  const luz = new THREE.PointLight(0xdfeaf2, 1.25, 12.5, 1.6);
+  luz.position.set(0, ALTO-.45, z); mundoPasillo.add(luz);
+  luces.push({luz, panel, prendida:true, t:rnd(2,26), mundo:"pasillo"});
+  iLuz++;
+}
+
+/* ---------- puertas de aula, marcos y cajas de luz ---------- */
+(function aulas(){
+  const hojas=[], dinteles=[], jambas=[], picaportes=[], cajitas=[];
+  for(let i=0;i<9;i++){
+    const z = Z_ATRAS-4 - i*4.6, lado = i%2? 1:-1, xp=lado*MX;
+    hojas   .push([xp-lado*.02, 1.06, z]);
+    dinteles.push([xp-lado*.03, 2.17, z]);
+    jambas  .push([xp-lado*.03, 1.08, z-.52]);
+    jambas  .push([xp-lado*.03, 1.08, z+.52]);
+    picaportes.push([xp-lado*.09, 1.02, z+.36]);
+    if(i%3===1) cajitas.push([xp-lado*.07, 2.55, z+1.5]);
+  }
+  instancias(new THREE.BoxGeometry(.07,2.12,1.0), matMadera, hojas);
+  instancias(new THREE.BoxGeometry(.1,.1,1.16),  matBlanco, dinteles);
+  instancias(new THREE.BoxGeometry(.1,2.16,.08), matBlanco, jambas);
+  instancias(new THREE.BoxGeometry(.1,.05,.16),  matMetal,  picaportes);
+  instancias(new THREE.BoxGeometry(.16,.24,.16), matCrema,  cajitas);
+})();
+
+/* ---------- TABLERO ELÉCTRICO de la pared izquierda (foto 1) ---------- */
+(function tablero(){
+  const z=-1.35, xp=-MX;
+  const m=new THREE.MeshLambertMaterial({map:texPlana(texTablero())});
+  caja(.20,1.55,.66, matCrema, xp+.10, 1.82, z);
+  plano(.66,1.55, m, xp+.205, 1.82, z, 0, -Math.PI/2);
+  caja(.06,.22,.06, matOscuro, xp+.16, 1.05, z-.30);            // caño que baja
+  caja(.06,1.5,.06, matOscuro, xp+.16, 1.85, z-.42);
+  // tablero secundario más chico, más adelante
+  caja(.16,.62,.44, matCrema, xp+.08, 2.05, -12.4);
+  caja(.17,.05,.46, matOscuro, xp+.085, 1.73, -12.4);
+})();
+
+/* ---------- cartelera de trabajos + carteles ---------- */
+plano(1.9,1.2, new THREE.MeshLambertMaterial({map:texPlana(texCartelera())}),
+      MX-.05, 1.88, -6.6, 0, -Math.PI/2);
+plano(.62,.2, new THREE.MeshBasicMaterial({map:texPlana(texCartel("SALIDA","#1f8a4c","#f2fff6",58))}),
+      MX-.05, 2.62, -8.9, 0, -Math.PI/2);
+plano(.34,.42, new THREE.MeshLambertMaterial({map:texPlana(texCartel("TÓMESE DEL\nPASAMANOS","#eceae0","#2b2f33",26))}),
+      -MX+.05, 2.05, -.35, 0, Math.PI/2);
+
+/* ---------- matafuegos y nicho de hidrante (foto 1, a la derecha) ---------- */
+function matafuego(z, lado){
+  const xp=lado*MX;
+  caja(.10,.62,.36, matBlanco, xp-lado*.05, 1.28, z);           // chapa de apoyo
+  const t=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.5,10), matRojoV);
+  t.position.set(xp-lado*.16, 1.25, z); mundoPasillo.add(t);
+  caja(.09,.1,.09, matOscuro, xp-lado*.16, 1.55, z);
+  plano(.2,.26, new THREE.MeshBasicMaterial({color:0xb03a2e}), xp-lado*.055, 1.78, z, 0, -lado*Math.PI/2);
+}
+matafuego(-3.1, 1); matafuego(-16.8, -1); matafuego(-31.5, 1);
+(function nichoHidrante(){                                       // gabinete rojo con vidrio
+  const z=-1.9, xp=MX;
+  caja(.26,1.15,.72, matRojoV, xp-.13, 1.62, z);
+  caja(.05,.95,.56, new THREE.MeshBasicMaterial({color:0x2b3138}), xp-.27, 1.62, z);
+  caja(.06,1.0,.06, matRojo, xp-.27, 1.62, z-.29);
+  caja(.06,1.0,.06, matRojo, xp-.27, 1.62, z+.29);
+})();
+
+/* ---------- mesas blancas y banquetas ---------- */
+function mesa(x,z,rot){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot||0;
+  const t=new THREE.Mesh(new THREE.BoxGeometry(.62,.05,1.25), matBlanco);
+  t.position.y=.74; g.add(t);
+  const b=new THREE.Mesh(new THREE.BoxGeometry(.58,.04,1.2), new THREE.MeshLambertMaterial({color:0xb9b6ab}));
+  b.position.y=.71; g.add(b);
+  [[-.24,-.52],[.24,-.52],[-.24,.52],[.24,.52]].forEach(([px,pz])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.72,6), matMetal);
+    p.position.set(px,.36,pz); g.add(p);
+  });
+  mundoPasillo.add(g);
+}
+function banqueta(x,z){
+  const g=new THREE.Group(); g.position.set(x,0,z);
+  const as=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.05,10),
+    new THREE.MeshLambertMaterial({color:0x8d6a3c}));
+  as.position.y=.52; g.add(as);
+  for(let i=0;i<4;i++){
+    const a=i*Math.PI/2+.4;
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.52,6), matMetal);
+    p.position.set(Math.cos(a)*.12,.26,Math.sin(a)*.12); g.add(p);
+  }
+  mundoPasillo.add(g);
+}
+mesa(-1.35,-4.6,0); mesa(1.30,-11.2,0); mesa(-1.35,-19.6,0); mesa(1.30,-27.4,0);
+banqueta(1.42,-5.4); banqueta(1.30,-6.2); banqueta(-1.40,-13.5); banqueta(1.38,-22.0);
+
+/* ---------- tacho de basura ---------- */
+(function tacho(){
+  const g=new THREE.Group(); g.position.set(-1.44,0,-9.8);
+  const c=new THREE.Mesh(new THREE.CylinderGeometry(.19,.16,.62,12),
+    new THREE.MeshLambertMaterial({color:0x2f5b3f}));
+  c.position.y=.31; g.add(c);
+  const t=new THREE.Mesh(new THREE.CylinderGeometry(.20,.20,.05,12), matOscuro);
+  t.position.y=.64; g.add(t);
+  mundoPasillo.add(g);
+})();
+
+/* ---------- METEGOL (el de la foto, a la derecha al arrancar) ---------- */
+(function metegol(){
+  const g=new THREE.Group(); g.position.set(1.18,0,-3.5); g.rotation.y=-.20;
+  const cuerpo=new THREE.Mesh(new THREE.BoxGeometry(.70,.24,1.32), matOscuro);
+  cuerpo.position.y=.84; g.add(cuerpo);
+  const canto=new THREE.Mesh(new THREE.BoxGeometry(.74,.05,1.36),
+    new THREE.MeshLambertMaterial({color:0x3a4046}));
+  canto.position.y=.97; g.add(canto);
+  const pasto=new THREE.Mesh(new THREE.PlaneGeometry(.58,1.18),
+    new THREE.MeshLambertMaterial({color:0x2f6b34}));
+  pasto.rotation.x=-Math.PI/2; pasto.position.y=.955; g.add(pasto);
+  const barra=new THREE.CylinderGeometry(.016,.016,1.05,6);
+  for(let i=0;i<6;i++){
+    const b=new THREE.Mesh(barra, matMetal);
+    b.rotation.z=Math.PI/2; b.position.set(0,1.0,-.5+i*.2); g.add(b);
+    const col = i%2? 0xd8452a : 0x2a5fd8;
+    for(let j=0;j<3;j++){
+      const m=new THREE.Mesh(new THREE.BoxGeometry(.055,.13,.05),
+        new THREE.MeshLambertMaterial({color:col}));
+      m.position.set(-.20+j*.20,.94,-.5+i*.2); g.add(m);
+    }
+    const man=new THREE.Mesh(new THREE.CylinderGeometry(.032,.032,.12,8),
+      new THREE.MeshLambertMaterial({color:i%2?0xd9a441:0x1b1d20}));
+    man.rotation.z=Math.PI/2; man.position.set(-.56,1.0,-.5+i*.2); g.add(man);
+  }
+  [[-.29,-.58],[.29,-.58],[-.29,.58],[.29,.58]].forEach(([x,z])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.028,.028,.74,6), matMetal);
+    p.position.set(x,.37,z); g.add(p);
+  });
+  mundoPasillo.add(g);
+})();
+
+/* ---------- PLANO DE EVACUACIÓN (la chapa de la pared, foto 2) ---------- */
+plano(1.45,.86, new THREE.MeshLambertMaterial({map:texPlana(texPlanoEvacuacion())}),
+      MX-.075, 1.92, -.75, 0, -Math.PI/2);
+caja(.03,.94,1.53, matMetal, MX-.045, 1.92, -.75);
+
+/* ---------- BIBLIOTECA (pared norte del plano) ---------- */
+(function biblioteca(){
+  const z=-13.2, xp=-MX;
+  caja(.09,2.2,1.9, new THREE.MeshLambertMaterial({color:0x8a8578}), xp+.05, 1.1, z);
+  caja(.11,2.2,.05, matOscuro, xp+.055, 1.1, z);
+  caja(.1,.1,2.0, matBlanco, xp+.05, 2.25, z);
+  [z-.18,z+.18].forEach(zz=> caja(.12,.05,.22, matMetal, xp+.1, 1.05, zz));
+  plano(1.5,.38, new THREE.MeshLambertMaterial({map:texPlana(texCartel("BIBLIOTECA","#26333d","#e8e4d9",44))}),
+        xp+.06, 2.66, z, 0, Math.PI/2);
+})();
+
+/* ---------- ESCALERAS del plano ---------- */
+function escalera(z, lado){
+  const x = lado*(MX-.02);
+  caja(.5,.12,1.62, matBlanco, x-lado*.24, 2.40, z);
+  caja(.5,2.40,.1, matBlanco, x-lado*.24, 1.20, z-.8);
+  caja(.5,2.40,.1, matBlanco, x-lado*.24, 1.20, z+.8);
+  plano(1.5,2.34, new THREE.MeshBasicMaterial({color:0x05070a}), x-lado*.02, 1.17, z, 0, -lado*Math.PI/2);
+  for(let i=0;i<6;i++)
+    caja(.42,.07,1.4, matOscuro, x-lado*(.46-i*.085), .10+i*.19, z);
+  plano(.62,.2, new THREE.MeshBasicMaterial({map:texPlana(texCartel("SALIDA","#1f8a4c","#f2fff6",58))}),
+        x-lado*.03, 2.66, z, 0, -lado*Math.PI/2);
+}
+escalera(-8.6, -1);
+escalera(-24.5, 1);
+
+/* ---------- VENTANALES CON REJA AL PATIO ---------- */
+(function ventanales(){
+  const barrotes=[];
+  for(let i=0;i<3;i++){
+    const z=-17.5-i*8.5, xp=-MX;
+    plano(1.5,1.3, new THREE.MeshBasicMaterial({color:0x0b1220}), xp+.05, 2.02, z, 0, Math.PI/2);
+    for(let j=0;j<8;j++) barrotes.push([xp+.12, 2.02, z-.7+j*.2]);
+    caja(.14,.1,1.6, matPared, xp+.1, 1.32, z);
+    caja(.12,1.44,.09, matBlanco, xp+.06, 2.02, z-.79);
+    caja(.12,1.44,.09, matBlanco, xp+.06, 2.02, z+.79);
+  }
+  instancias(new THREE.BoxGeometry(.05,1.34,.05), matBlanco, barrotes);
+})();
+
+/* ==========================================================
+   HALL DEL ASCENSOR (foto 3)
+   ========================================================== */
+(function hall(){
+  const w=SALA.x2-SALA.x1, d=SALA.z2-SALA.z1, cz=(SALA.z1+SALA.z2)/2, h=3.1;
+  const matPisoSala=new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(),4,5),
+                                                 shininess:22, specular:0x24261f});
+  plano(w,d,matPisoSala,0,.002,cz,-Math.PI/2,0);
+  plano(w,d,new THREE.MeshLambertMaterial({color:0xd7dbdd}),0,h,cz,Math.PI/2,0);
+  const matHall=new THREE.MeshLambertMaterial({map:texDe(texPared(),4,1,false), color:0xd6e4ef});
+  plano(d,h,matHall,SALA.x1,h/2,cz,0, Math.PI/2);
+  plano(d,h,matHall,SALA.x2,h/2,cz,0,-Math.PI/2);
+  plano(w,h,matHall,0,h/2,SALA.z2,0,Math.PI);
+
+  // puertas del ascensor: dos hojas gris azuladas con junta y llamador
+  const matAsc=new THREE.MeshLambertMaterial({color:0x66798c});
+  const zp=SALA.z2-.05;
+  caja(.85,2.25,.09, matAsc, -1.03, 1.13, zp);
+  caja(.85,2.25,.09, matAsc, -.17,  1.13, zp);
+  caja(.04,2.25,.11, new THREE.MeshLambertMaterial({color:0x3d4a57}), -.60, 1.13, zp-.01);
+  caja(1.9,.16,.16, matOscuro, -.60, 2.33, zp-.02);              // dintel metálico
+  caja(.1,.1,.14, matOscuro, -.60, 2.42, zp-.02);
+  caja(.16,.28,.06, new THREE.MeshLambertMaterial({color:0xb9bcbd}), .32, 1.20, zp-.03);
+  caja(.05,.05,.04, new THREE.MeshBasicMaterial({color:0xd94a35}), .32, 1.20, zp-.06);
+  const luzAsc=new THREE.PointLight(0xcfd8e4,.9,7);
+  luzAsc.position.set(-.6,2.1,SALA.z2-1.2); mundoPasillo.add(luzAsc);
+  luces.push({luz:luzAsc, panel:null, prendida:true, t:rnd(3,12), mundo:"pasillo"});
+  plano(.9,.9, matPanel(), -.3, h-.03, cz+.6, Math.PI/2, 0);
+
+  // locker amarillo con candado (foto 3)
+  const matAm=new THREE.MeshLambertMaterial({color:0xd6bb3a});
+  caja(.92,1.9,.46, matAm, 1.55, .95, SALA.z2-.32);
+  caja(.03,1.9,.48, new THREE.MeshLambertMaterial({color:0x8d7c26}), 1.55, .95, SALA.z2-.34);
+  caja(.96,.12,.5, matOscuro, 1.55, 1.96, SALA.z2-.32);
+  caja(.1,.16,.05, matOscuro, 1.44, 1.02, SALA.z2-.56);          // manijas + candado
+  caja(.1,.16,.05, matOscuro, 1.66, 1.02, SALA.z2-.56);
+  caja(.07,.09,.04, matMetal, 1.55, 1.02, SALA.z2-.57);
+  caja(.3,.2,.02, matBlanco, 1.30, 1.55, SALA.z2-.56);           // etiqueta pegada
+
+  // ventana con reja
+  plano(1.0,1.2,new THREE.MeshBasicMaterial({color:0x111a24}),SALA.x2-.03,1.8,SALA.z1+2.6,0,-Math.PI/2);
+  for(let i=0;i<7;i++) caja(.05,1.25,.05, matBlanco, SALA.x2-.12,1.8,SALA.z1+2.1+i*.16);
+  caja(.1,1.34,.1, matBlanco, SALA.x2-.07,1.8,SALA.z1+2.02);
+  caja(.1,1.34,.1, matBlanco, SALA.x2-.07,1.8,SALA.z1+3.18);
+})();
+
+/* ==========================================================
+   5. MUNDO B — BACKROOMS
+   ========================================================== */
+const CEL = 3.3, N = 21, MURO_H = 3.0;
+const mundoBack = new THREE.Group();
+mundoBack.visible = false;
+scene.add(mundoBack);
+
+let grilla=[], salidaCelda={x:1,y:1};
+
+function generarLaberinto(){
+  grilla = Array.from({length:N},()=>Array(N).fill(1));
+  const stack=[[1,1]]; grilla[1][1]=0;
+  const dirs=[[0,-2],[0,2],[-2,0],[2,0]];
+  while(stack.length){
+    const [cx,cy]=stack[stack.length-1];
+    const op=[];
+    for(const [dx,dy] of dirs){
+      const nx=cx+dx, ny=cy+dy;
+      if(nx>0&&ny>0&&nx<N-1&&ny<N-1&&grilla[ny][nx]===1) op.push([nx,ny,cx+dx/2,cy+dy/2]);
+    }
+    if(!op.length){ stack.pop(); continue; }
+    const [nx,ny,mx,my]=op[Math.floor(Math.random()*op.length)];
+    grilla[my][mx]=0; grilla[ny][nx]=0; stack.push([nx,ny]);
+  }
+  // abrir paredes extra -> planta abierta tipo backrooms
+  for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)
+    if(grilla[y][x]===1 && Math.random()<0.22) grilla[y][x]=0;
+
+  // salida: celda abierta más lejana del spawn
+  let best=-1;
+  for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++){
+    if(grilla[y][x]) continue;
+    const d=(x-1)**2+(y-1)**2;
+    if(d>best){ best=d; salidaCelda={x,y}; }
+  }
+}
+const c2w = (i)=> (i-(N-1)/2)*CEL;   // celda -> mundo
+
+function construirBackrooms(){
+  while(mundoBack.children.length) mundoBack.remove(mundoBack.children[0]);
+  generarLaberinto();
+
+  const lado=N*CEL;
+  const matAlf=new THREE.MeshLambertMaterial({map:texDe(texAlfombra(), N, N)});
+  const pisoB=new THREE.Mesh(new THREE.PlaneGeometry(lado,lado), matAlf);
+  pisoB.rotation.x=-Math.PI/2; mundoBack.add(pisoB);
+  const matTechoB=new THREE.MeshLambertMaterial({color:0xd8d2b8});
+  const techoB=new THREE.Mesh(new THREE.PlaneGeometry(lado,lado), matTechoB);
+  techoB.rotation.x=Math.PI/2; techoB.position.y=MURO_H; mundoBack.add(techoB);
+
+  // TODAS las paredes en un solo InstancedMesh -> muy liviano
+  const cuenta = grilla.flat().filter(v=>v===1).length;
+  const matPapel=new THREE.MeshLambertMaterial({map:texDe(texPapelBackroom(),1,1)});
+  const inst=new THREE.InstancedMesh(new THREE.BoxGeometry(CEL,MURO_H,CEL), matPapel, cuenta);
+  const dummy=new THREE.Object3D(); let k=0;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    if(grilla[y][x]!==1) continue;
+    dummy.position.set(c2w(x), MURO_H/2, c2w(y));
+    dummy.updateMatrix(); inst.setMatrixAt(k++, dummy.matrix);
+  }
+  inst.instanceMatrix.needsUpdate=true;
+  mundoBack.add(inst);
+
+  // fluorescentes zumbando (limpio los de la corrida anterior)
+  for(let i=luces.length-1;i>=0;i--) if(luces[i].mundo==="backrooms") luces.splice(i,1);
+  for(let y=1;y<N-1;y+=3)for(let x=1;x<N-1;x+=3){
+    if(grilla[y][x]) continue;
+    const panel=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.5),
+      new THREE.MeshBasicMaterial({color:0xfff6d8}));
+    panel.rotation.x=Math.PI/2; panel.position.set(c2w(x),MURO_H-.03,c2w(y));
+    mundoBack.add(panel);
+    const luz=new THREE.PointLight(0xffe9a8,.95,9,1.7);
+    luz.position.set(c2w(x),MURO_H-.4,c2w(y)); mundoBack.add(luz);
+    luces.push({luz,panel,prendida:true,t:rnd(1,14),mundo:"backrooms"});
+  }
+
+  // puerta de salida (verde)
+  const sx=c2w(salidaCelda.x), sz=c2w(salidaCelda.y);
+  const puerta=new THREE.Mesh(new THREE.BoxGeometry(1.2,2.2,.14),
+    new THREE.MeshBasicMaterial({color:0x2ecc71}));
+  puerta.position.set(sx,1.1,sz); mundoBack.add(puerta);
+  const lp=new THREE.PointLight(0x2ecc71,1.6,10); lp.position.set(sx,1.6,sz); mundoBack.add(lp);
+
+  // --- LAS DOS ENTIDADES ---
+  entidades = C().modelos ? [ crearMerodeadorHard(), crearNenaHard() ]
+                          : [ crearMerodeador(), crearNena() ];
+  const c1=celdaLibre(9), c2=celdaLibre(7);
+  entidades[0].grupo.position.set(c2w(c1[0]),0,c2w(c1[1]));
+  entidades[1].grupo.position.set(c2w(c2[0]),0,c2w(c2[1]));
+  entidades.forEach(e=>mundoBack.add(e.grupo));
+  vistaNena=false;
+}
+
+/* celda transitable a cierta distancia del spawn (1,1) */
+function celdaLibre(minD){
+  const libres=[];
+  for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++)
+    if(!grilla[y][x] && Math.hypot(x-1,y-1)>minD) libres.push([x,y]);
+  return libres.length ? libres[Math.floor(Math.random()*libres.length)] : [N-3,N-3];
+}
+
+/* --- sombra de contacto: un disco oscuro que las apoya en el piso --- */
+const sombraTex=(()=>{
+  const [c,x]=lienzo(128,128);
+  const g=x.createRadialGradient(64,64,4,64,64,62);
+  g.addColorStop(0,"rgba(0,0,0,.8)"); g.addColorStop(.55,"rgba(0,0,0,.34)");
+  g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle=g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+})();
+function sombraContacto(grupo,r){
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(r,r),
+    new THREE.MeshBasicMaterial({map:sombraTex,transparent:true,depthWrite:false}));
+  m.rotation.x=-Math.PI/2; m.position.y=.02; grupo.add(m);
+}
+/* --- caras dibujadas: leen mucho mejor que la geometría --- */
+function texCaraMerodeador(){
+  const [c,x]=lienzo(256,320);
+  const g=x.createRadialGradient(128,150,20,128,160,150);
+  g.addColorStop(0,"#cfc6b4"); g.addColorStop(.7,"#a89e8c"); g.addColorStop(1,"#5d5646");
+  x.fillStyle=g; x.beginPath(); x.ellipse(128,160,86,132,0,0,7); x.fill();
+  x.fillStyle="rgba(20,18,14,.85)";
+  x.beginPath(); x.ellipse(92,138,26,34,0,0,7); x.fill();
+  x.beginPath(); x.ellipse(164,138,26,34,0,0,7); x.fill();
+  x.fillStyle="#07070a";
+  x.beginPath(); x.ellipse(92,142,15,21,0,0,7); x.fill();
+  x.beginPath(); x.ellipse(164,142,15,21,0,0,7); x.fill();
+  x.fillStyle="rgba(255,255,255,.85)";
+  x.beginPath(); x.arc(97,134,4,0,7); x.fill();
+  x.beginPath(); x.arc(169,134,4,0,7); x.fill();
+  x.fillStyle="rgba(30,26,20,.7)"; x.fillRect(120,176,16,26);
+  x.fillStyle="#0a0a0c"; x.beginPath(); x.ellipse(128,236,30,40,0,0,7); x.fill();
+  x.fillStyle="rgba(90,80,68,.5)";
+  for(let i=0;i<40;i++) x.fillRect(40+Math.random()*176,50+Math.random()*230,1+Math.random()*3,1+Math.random()*18);
+  return new THREE.CanvasTexture(c);
+}
+function texCaraNena(){
+  const [c,x]=lienzo(256,320);
+  x.fillStyle="#cfc7b4"; x.beginPath(); x.ellipse(128,168,84,116,0,0,7); x.fill();
+  x.fillStyle="#3a0a08"; x.beginPath(); x.ellipse(128,244,30,12,0,0,7); x.fill();
+  x.fillStyle="#efe9dc";
+  for(let i=0;i<7;i++) x.fillRect(102+i*8,238,5,10);
+  x.fillStyle="#0d0b09";
+  x.beginPath(); x.moveTo(24,150); x.bezierCurveTo(30,20,226,20,232,150);
+  x.lineTo(232,300); x.bezierCurveTo(190,210,66,210,24,300); x.closePath(); x.fill();
+  for(let i=0;i<26;i++){
+    x.strokeStyle="rgba(10,9,8,.9)"; x.lineWidth=3+Math.random()*5;
+    const px=30+Math.random()*196;
+    x.beginPath(); x.moveTo(px,60);
+    x.quadraticCurveTo(px+(Math.random()-.5)*50,190,px+(Math.random()-.5)*70,300); x.stroke();
+  }
+  return new THREE.CanvasTexture(c);
+}
+function miembro(largo,r1,r2,mat){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,largo,8),mat);
+  m.geometry.translate(0,-largo/2,0);        // pivote arriba, para que gire desde el hombro
+  return m;
+}
+
+/* MERODEADOR HARDCORE: articulado, con cara y sombra */
+function crearMerodeadorHard(){
+  const g=new THREE.Group();
+  const tela=new THREE.MeshLambertMaterial({color:0x101216});
+  const osc =new THREE.MeshLambertMaterial({color:0x08090c});
+  sombraContacto(g,1.5);
+  const torso=new THREE.Group(); torso.position.y=1.12; torso.rotation.x=.13; g.add(torso);
+  const pecho=new THREE.Mesh(new THREE.CylinderGeometry(.21,.27,.72,10),tela);
+  pecho.position.y=.14; torso.add(pecho);
+  const cadera=new THREE.Mesh(new THREE.CylinderGeometry(.24,.20,.3,10),osc);
+  cadera.position.y=-.32; torso.add(cadera);
+  const hom=new THREE.Mesh(new THREE.SphereGeometry(.245,12,10),tela);
+  hom.scale.set(1.35,.55,.9); hom.position.y=.46; torso.add(hom);
+  const cuello=new THREE.Mesh(new THREE.CylinderGeometry(.075,.09,.3,8),tela);
+  cuello.position.y=.62; torso.add(cuello);
+  const cabeza=new THREE.Group(); cabeza.position.y=.86; cabeza.rotation.z=.09; torso.add(cabeza);
+  const craneo=new THREE.Mesh(new THREE.SphereGeometry(.2,16,14),osc);
+  craneo.scale.set(.92,1.15,.95); cabeza.add(craneo);
+  const cara=new THREE.Mesh(new THREE.PlaneGeometry(.3,.375),
+    new THREE.MeshLambertMaterial({map:texCaraMerodeador(),transparent:true,
+      emissive:0x2a2620,side:THREE.DoubleSide}));
+  cara.position.set(0,.01,-.185); cara.rotation.y=Math.PI; cabeza.add(cara);
+  const brazos=[], piernas=[];
+  [-.3,.3].forEach(x=>{
+    const hombro=new THREE.Group(); hombro.position.set(x,.42,0); torso.add(hombro);
+    hombro.add(miembro(.62,.062,.05,tela));
+    const ante=new THREE.Group(); ante.position.y=-.62; ante.rotation.x=.3; hombro.add(ante);
+    ante.add(miembro(.6,.05,.036,tela));
+    const mano=new THREE.Group(); mano.position.y=-.6; ante.add(mano);
+    for(let i=0;i<4;i++){
+      const d=miembro(.19,.016,.008,osc);
+      d.position.set(-.045+i*.03,0,0); d.rotation.x=.5+i*.12; mano.add(d);
+    }
+    brazos.push(hombro);
+  });
+  [-.13,.13].forEach(x=>{
+    const cad=new THREE.Group(); cad.position.set(x,-.42,0); torso.add(cad);
+    cad.add(miembro(.62,.085,.062,osc));
+    const pant=new THREE.Group(); pant.position.y=-.62; cad.add(pant);
+    pant.add(miembro(.6,.06,.045,osc));
+    const pie=new THREE.Mesh(new THREE.BoxGeometry(.11,.055,.26),osc);
+    pie.position.set(0,-.62,-.06); pant.add(pie);
+    piernas.push(cad);
+  });
+  return {grupo:g, tipo:"merodeador", vel:C().velCosa, matar:1.05, t:0,
+          anim:{brazos,piernas,fase:0,ampB:.42,ampP:.55,offB:-.18}};
+}
+
+/* NENA HARDCORE: vestido con vuelo, mechones, piernas en trote */
+function crearNenaHard(){
+  const g=new THREE.Group();
+  const piel=new THREE.MeshLambertMaterial({color:0xc9c1ad});
+  const tela=new THREE.MeshLambertMaterial({color:0xd9d4c6});
+  const telaS=new THREE.MeshLambertMaterial({color:0xb5b0a0});
+  sombraContacto(g,1.0);
+  const cuerpo=new THREE.Group(); cuerpo.position.y=.62; cuerpo.rotation.x=.06; g.add(cuerpo);
+  const perfil=[];
+  for(let i=0;i<=12;i++){
+    const t=i/12, y=-.30+t*.54;
+    perfil.push(new THREE.Vector2(.105+Math.pow(t,.6)*.03+(1-t)*.15+Math.sin(t*8)*.009, y));
+  }
+  cuerpo.add(new THREE.Mesh(new THREE.LatheGeometry(perfil,20),tela));
+  const ruedo=new THREE.Mesh(new THREE.TorusGeometry(.258,.018,6,24),telaS);
+  ruedo.rotation.x=Math.PI/2; ruedo.position.y=-.30; cuerpo.add(ruedo);
+  const cuellito=new THREE.Mesh(new THREE.CylinderGeometry(.062,.075,.13,10),piel);
+  cuellito.position.y=.24; cuerpo.add(cuellito);
+  const cabeza=new THREE.Group(); cabeza.position.y=.4;
+  cabeza.rotation.z=-.10; cabeza.rotation.x=-.18; cuerpo.add(cabeza);
+  const craneo=new THREE.Mesh(new THREE.SphereGeometry(.155,16,14),piel);
+  craneo.scale.set(1,1.06,.96); cabeza.add(craneo);
+  const cara=new THREE.Mesh(new THREE.PlaneGeometry(.26,.325),
+    new THREE.MeshLambertMaterial({map:texCaraNena(),transparent:true,
+      emissive:0x2a2622,side:THREE.DoubleSide}));
+  cara.position.set(0,-.005,-.163); cara.rotation.y=Math.PI; cabeza.add(cara);
+  const pelo=new THREE.Mesh(new THREE.SphereGeometry(.166,16,14,0,Math.PI*2,0,Math.PI*.47),
+    new THREE.MeshLambertMaterial({color:0x0e0c0a}));
+  pelo.position.set(0,.03,.012); cabeza.add(pelo);
+  for(let i=0;i<12;i++){
+    const a=Math.PI*.28+(i/11)*Math.PI*1.44;
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(.014,.007,.26+Math.random()*.14,5),
+      new THREE.MeshLambertMaterial({color:0x0d0b09}));
+    m.geometry.translate(0,-.18,0);
+    m.position.set(Math.cos(a)*.13,.06,Math.sin(a)*.115);
+    m.rotation.z=Math.cos(a)*.28; m.rotation.x=Math.sin(a)*.24; cabeza.add(m);
+  }
+  const brazos=[], piernas=[];
+  [-.16,.16].forEach((x,i)=>{
+    const hombro=new THREE.Group(); hombro.position.set(x,.2,0); cuerpo.add(hombro);
+    hombro.add(miembro(.24,.038,.031,piel));
+    const ante=new THREE.Group(); ante.position.y=-.24; ante.rotation.x=i?.5:.1; hombro.add(ante);
+    ante.add(miembro(.23,.031,.024,piel));
+    const mano=new THREE.Mesh(new THREE.SphereGeometry(.036,8,8),piel);
+    mano.position.y=-.24; ante.add(mano);
+    brazos.push(hombro);
+  });
+  [-.09,.09].forEach(x=>{
+    const cad=new THREE.Group(); cad.position.set(x,-.28,0); cuerpo.add(cad);
+    cad.add(miembro(.26,.05,.04,piel));
+    const pant=new THREE.Group(); pant.position.y=-.26; cad.add(pant);
+    pant.add(miembro(.24,.042,.034,new THREE.MeshLambertMaterial({color:0xe8e4d6})));
+    const zap=new THREE.Mesh(new THREE.BoxGeometry(.08,.045,.16),
+      new THREE.MeshLambertMaterial({color:0x2a2622}));
+    zap.position.set(0,-.25,-.03); pant.add(zap);
+    piernas.push(cad);
+  });
+  return {grupo:g, tipo:"nena", vel:C().velNena, matar:1.0, t:0, risaT:rnd(1,4),
+          anim:{brazos,piernas,fase:0,ampB:.5,ampP:.62,offB:-.9}};
+}
+
+/* ENTIDAD 1 — EL MERODEADOR: te sigue siempre, lento y constante */
+function crearMerodeador(){
+  const g=new THREE.Group();
+  const cuerpo=new THREE.Mesh(new THREE.CylinderGeometry(.20,.30,1.55,8),
+    new THREE.MeshLambertMaterial({color:0x14161a}));
+  cuerpo.position.y=.78; g.add(cuerpo);
+  const cabeza=new THREE.Mesh(new THREE.SphereGeometry(.20,10,8),
+    new THREE.MeshLambertMaterial({color:0x1b1d22}));
+  cabeza.position.y=1.7; g.add(cabeza);
+  const cara=new THREE.Mesh(new THREE.SphereGeometry(.145,10,8),
+    new THREE.MeshLambertMaterial({color:0xb9b2a4}));
+  cara.position.set(0,1.69,-.09); g.add(cara);
+  [-.06,.06].forEach(x=>{
+    const ojo=new THREE.Mesh(new THREE.SphereGeometry(.033,6,6),
+      new THREE.MeshBasicMaterial({color:0x0a0a0c}));
+    ojo.position.set(x,1.73,-.2); g.add(ojo);
+  });
+  const brazo=new THREE.CylinderGeometry(.045,.035,1.15,6);
+  const matB=new THREE.MeshLambertMaterial({color:0x14161a});
+  [-.26,.26].forEach(x=>{
+    const b=new THREE.Mesh(brazo,matB); b.position.set(x,.92,0); g.add(b);
+  });
+  return {grupo:g, tipo:"merodeador", vel:C().velCosa, matar:1.05, t:0};
+}
+
+/* ENTIDAD 2 — LA NENA: se queda quieta mientras la mirás */
+function crearNena(){
+  const g=new THREE.Group();
+  const piel=new THREE.MeshLambertMaterial({color:0xcfc7b4});
+  const vestido=new THREE.Mesh(new THREE.ConeGeometry(.30,.80,10),
+    new THREE.MeshLambertMaterial({color:0xd9d4c6}));
+  vestido.position.y=.40; g.add(vestido);
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(.12,.16,.34,8), piel);
+  torso.position.y=.92; g.add(torso);
+  const cabeza=new THREE.Mesh(new THREE.SphereGeometry(.155,10,8), piel);
+  cabeza.position.y=1.22; g.add(cabeza);
+  const pelo=new THREE.Mesh(new THREE.SphereGeometry(.175,12,10,0,Math.PI*2,0,Math.PI*0.72),
+    new THREE.MeshLambertMaterial({color:0x100e0c}));
+  pelo.position.y=1.235; pelo.rotation.x=-.35; g.add(pelo);
+  const boca=new THREE.Mesh(new THREE.SphereGeometry(.038,6,6),
+    new THREE.MeshBasicMaterial({color:0x3a0a08}));
+  boca.position.set(0,1.15,-.135); g.add(boca);
+  const brazo=new THREE.CylinderGeometry(.038,.03,.52,6);
+  [-.20,.20].forEach(x=>{
+    const b=new THREE.Mesh(brazo,piel); b.position.set(x,.86,0); g.add(b);
+  });
+  return {grupo:g, tipo:"nena", vel:C().velNena, matar:1.0, t:0, risaT:rnd(1,4)};
+}
+let entidades=[], vistaNena=false;
+
+/* ==========================================================
+   5b. MUNDO C — PLANTA BAJA (nivel 3)
+   Planta real: el hall en el medio; el PORTÓN de salida en el
+   oeste y el BUSTO enfrentado en el este. El pasillo cruza en
+   perpendicular: al sur la sala del ascensor (donde arrancás),
+   al norte el fondo con la cortina roja.
+   ========================================================== */
+const mundoPlanta = new THREE.Group();
+mundoPlanta.visible = false;
+scene.add(mundoPlanta);
+
+const PAS_ALTO = 3.8, HALL_ALTO = 4.6, ASC_ALTO = 3.3;
+const PB = {
+  ascensor: {x1:-2.20, x2: 2.20, z1:-42.6, z2:-38.0},   // foto: sala del ascensor
+  pasillo : {x1:-2.20, x2: 2.20, z1:-38.0, z2: -5.8},   // pasillo largo
+  hall    : {x1:-10.0, x2:  8.0, z1: -7.0, z2:  4.2},   // hall de entrada
+  norte   : {x1:-2.20, x2: 2.20, z1:  3.2, z2: 14.0}    // fondo con cortina roja
+};
+const PB_ZONAS = [
+  PB.ascensor, PB.pasillo, PB.hall, PB.norte,
+  {x1:-0.62, x2:0.62, z1:-38.7, z2:-37.3, m:0.12}       // vano angosto del ascensor
+];
+const PB_BLOQUES = [];
+let interactivos=[], lucesPB=[], luzPlanta=false, tieneLlave=false;
+let zonaDeLaLlave="", escondite=null, bustoObj=null, acertijoFallado=false, acertijoResuelto=false;
+
+const cajaPB  = (w,h,d,mat,x,y,z)=> caja(w,h,d,mat,x,y,z,mundoPlanta);
+const planoPB = (w,h,mat,x,y,z,rx,ry)=> plano(w,h,mat,x,y,z,rx,ry,mundoPlanta);
+function instPB(geo,mat,lista){
+  const m=new THREE.InstancedMesh(geo,mat,lista.length), d=new THREE.Object3D();
+  lista.forEach((it,i)=>{ d.position.set(it[0],it[1],it[2]);
+    d.rotation.set(it[3]||0,it[4]||0,it[5]||0); d.updateMatrix(); m.setMatrixAt(i,d.matrix); });
+  m.instanceMatrix.needsUpdate=true; mundoPlanta.add(m); return m;
+}
+function bloque(x1,z1,x2,z2){ PB_BLOQUES.push({x1:Math.min(x1,x2),x2:Math.max(x1,x2),
+                                               z1:Math.min(z1,z2),z2:Math.max(z1,z2)}); }
+function registro(o){ interactivos.push(Object.assign({tipo:"registro",r:1.7,usado:false},o)); }
+function cartel(txt,fondo,tinta,tam){ return new THREE.MeshBasicMaterial({map:texPlana(texCartel(txt,fondo,tinta,tam))}); }
+
+function construirPlantaBaja(){
+  while(mundoPlanta.children.length) mundoPlanta.remove(mundoPlanta.children[0]);
+  interactivos=[]; lucesPB=[]; PB_BLOQUES.length=0;
+  luzPlanta=false; tieneLlave=false; acertijoFallado=false; acertijoResuelto=false; bustoObj=null;
+
+  const matP    = new THREE.MeshLambertMaterial({map:texDe(texParedPB(),12,1,false)});
+  const matPh   = new THREE.MeshLambertMaterial({map:texDe(texParedPB(),18,1,false)});
+  const matPiso = new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(),9,70), shininess:26, specular:0x26281f});
+  const matPisoH= new THREE.MeshPhongMaterial({map:texDe(texPisoGranito(),26,16), shininess:26, specular:0x26281f});
+  const matTe   = new THREE.MeshLambertMaterial({color:0xe9e7df});
+  const matGris = new THREE.MeshLambertMaterial({color:0x99a1a5});
+  const matGrisC= new THREE.MeshLambertMaterial({color:0xc2c8ca});
+  const matBl   = new THREE.MeshLambertMaterial({color:0xefede5});
+  const matNe   = new THREE.MeshLambertMaterial({color:0x1d2024});
+  const matRo   = new THREE.MeshLambertMaterial({color:0xa8281c});
+  const matMar  = new THREE.MeshLambertMaterial({map:texDe(texMarmol(),2,2)});
+  const matVid  = new THREE.MeshLambertMaterial({map:texDe(texVidrioRet(),3,3)});
+  const matApag = new THREE.MeshBasicMaterial({color:0x3a3a36});
+  const matBan  = new THREE.MeshLambertMaterial({map:texPlana(texBanner()), side:THREE.DoubleSide});
+  const matAf   = new THREE.MeshLambertMaterial({map:texPlana(texAfiche())});
+  const SALIDA  = ()=> cartel("SALIDA","#1f8a4c","#f2fff6",58);
+
+  function panelTecho(x,z,y,tam,rango){
+    const pl=planoPB(tam,tam,matApag,x,y-.02,z,Math.PI/2,0);
+    cajaPB(tam+.08,.09,tam+.08, matBl, x, y+.03, z);
+    [-tam/2.4,tam/2.4].forEach(dx=> cajaPB(.012,.5,.012, matNe, x+dx, y+.28, z));
+    const luz=new THREE.PointLight(0xf4f1e4, 0, rango||12, 1.6);
+    luz.position.set(x,y-.3,z); mundoPlanta.add(luz);
+    lucesPB.push({luz,panel:pl});
+  }
+  // bandeja portacables + ménsulas a lo largo de una pared
+  function bandeja(xp,lado,z0,z1,y){
+    const mens=[];
+    for(let z=z0; z<z1; z+=6) cajaPB(.5,.06,Math.min(6,z1-z), matGalva, xp-lado*.32, y, z+Math.min(6,z1-z)/2);
+    for(let z=z0; z<z1; z+=1.5) mens.push([xp-lado*.30, y-.06, z]);
+    instPB(new THREE.BoxGeometry(.60,.05,.05), matMetal, mens);
+  }
+
+  /* ================= PASILLO LARGO (sur: del ascensor al hall) ================ */
+  const pz1=PB.pasillo.z1, pz2=PB.pasillo.z2, pcz=(pz1+pz2)/2, plg=pz2-pz1;
+  planoPB(4.4,plg,matPiso,0,0,pcz,-Math.PI/2,0);
+  planoPB(4.4,plg,matTe,0,PAS_ALTO,pcz,Math.PI/2,0);
+  planoPB(plg,PAS_ALTO,matP,-2.20,PAS_ALTO/2,pcz,0, Math.PI/2);
+  planoPB(plg,PAS_ALTO,matP, 2.20,PAS_ALTO/2,pcz,0,-Math.PI/2);
+  bandeja( 2.20, 1,pz1+1,pz2-1,PAS_ALTO-.55);
+  bandeja(-2.20,-1,pz1+1,pz2-1,PAS_ALTO-.55);
+  cajaPB(.13,.13,plg-3, matRo, 2.20-.55, PAS_ALTO-.28, pcz);        // caño rojo
+  [-30,-18].forEach(z=>{ cajaPB(.12,2.4,.12, matRo, 1.65, 1.5, z);
+                         cajaPB(.2,.2,.2, matRo, 1.65, 2.75, z); });
+  for(let z=pz1+3; z<pz2-1; z+=6.5) panelTecho(0,z,PAS_ALTO-.55,.95,12);
+  // caños negros que corren por el techo (foto)
+  cajaPB(.07,.07,plg-4, matNe, .9, PAS_ALTO-.12, pcz);
+  cajaPB(.07,.07,plg-4, matNe, 1.05, PAS_ALTO-.12, pcz);
+
+  // gabinete de manguera + matafuegos + carteles
+  cajaPB(.28,1.05,.68, matRo, 2.06, 1.55, -26.5);
+  cajaPB(.05,.86,.52, new THREE.MeshBasicMaterial({color:0x2b3138}), 1.91, 1.55, -26.5);
+  registro({x:1.6,z:-26.5,zona:"el pasillo largo",etiqueta:"revisar el gabinete de manguera"});
+  [[-14.5,1],[-33.0,-1]].forEach(([z,l])=>{
+    const xp=l*2.20;
+    cajaPB(.10,.62,.36, matBl, xp-l*.05, 1.28, z);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(.075,.075,.5,10), matRo);
+    t.position.set(xp-l*.16,1.25,z); mundoPlanta.add(t);
+    planoPB(.24,.3, cartel("MATAFUEGO","#b03a2e","#fff",30), xp-l*.055,1.82,z,0,-l*Math.PI/2);
+  });
+
+  // TABLERO GENERAL (acá vuelve la luz)
+  cajaPB(.20,1.05,.80, new THREE.MeshLambertMaterial({color:0x7f8f7a}), -2.10, 1.75, -22.0);
+  cajaPB(.06,.9,.66, new THREE.MeshLambertMaterial({color:0x6b7a67}), -1.99, 1.75, -22.0);
+  cajaPB(.07,.12,.07, matMetal, -1.96, 1.75, -21.7);
+  planoPB(.5,.16, cartel("TABLERO GENERAL","#26333d","#e8e4d9",26), -1.97,2.42,-22.0,0,Math.PI/2);
+  interactivos.push({tipo:"tablero", x:-1.85, z:-22.0, r:2.0, etiqueta:"subir la llave térmica"});
+
+  // puertas de aula con sus carteles
+  const rotulos=["DIRECCIÓN","SECRETARÍA","BIBLIOTECA","6.º B","5.º A","PRECEPTORÍA"];
+  rotulos.forEach((txt,i)=>{
+    const z=-34.5+i*5.2, lado=i%2?1:-1, xp=lado*2.20;
+    cajaPB(.08,2.12,1.0, matGrisC, xp-lado*.03, 1.06, z);
+    planoPB(.45,.72, matVid, xp-lado*.08, 1.62, z, 0, -lado*Math.PI/2);
+    cajaPB(.1,.1,1.16, matBl, xp-lado*.04, 2.20, z);
+    [z-.53,z+.53].forEach(zz=> cajaPB(.1,2.16,.08, matBl, xp-lado*.04, 1.08, zz));
+    cajaPB(.1,.05,.16, matMetal, xp-lado*.10, 1.02, z+.36);
+    planoPB(.52,.16, cartel(txt,"#26333d","#e8e4d9",30), xp-lado*.05, 2.45, z, 0, -lado*Math.PI/2);
+  });
+
+  // telones negros con trabajos + afiches + planta colgante
+  [[-2.14,-20.0],[2.14,-12.5],[-2.14,-9.0]].forEach(([x,z])=>{
+    const l=Math.sign(x);
+    planoPB(1.2,2.4, matBan, x-l*.06, 1.9, z, 0, -l*Math.PI/2);
+    cajaPB(.06,.05,1.3, matMetal, x-l*.06, 3.14, z);
+  });
+  planoPB(1.5,1.0, matAf, -2.13, 1.95, -16.0, 0, Math.PI/2);
+  planoPB(1.5,1.0, matAf,  2.13, 1.95, -30.0, 0, -Math.PI/2);
+  interactivos.push({tipo:"info", x:-1.5, z:-16.0, r:1.9, etiqueta:"leer la cartelera",
+    texto:"«NO AL BULLYING» — 6.º B.\nLetras recortadas de revistas. Abajo, con birome:\n«el que se queda después de hora no vuelve a salir»."});
+
+  // balde y trapo de piso, silla amarilla, banco
+  (function balde(){
+    const b=new THREE.Mesh(new THREE.CylinderGeometry(.16,.13,.26,10),
+      new THREE.MeshLambertMaterial({color:0xd8c23a}));
+    b.position.set(-1.5,.13,-11.5); mundoPlanta.add(b);
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.3,6), matBl);
+    p.position.set(-1.3,.65,-11.7); p.rotation.z=.25; mundoPlanta.add(p);
+    registro({x:-1.5,z:-11.5,zona:"el pasillo largo",etiqueta:"revisar el balde"});
+  })();
+
+  function tacho(x,z,zona){
+    const g=new THREE.Group(); g.position.set(x,0,z);
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(.20,.17,.66,12),
+      new THREE.MeshLambertMaterial({color:0x35424a})); c.position.y=.33; g.add(c);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(.21,.21,.05,12), matNe); t.position.y=.68; g.add(t);
+    mundoPlanta.add(g);
+    registro({x,z,zona,etiqueta:"revisar el tacho"});
+  }
+  tacho(1.80,-35.5,"el pasillo largo");
+  tacho(-1.82,-24.0,"el pasillo largo");
+  tacho(1.80,-8.5,"el pasillo largo");
+
+  // escalera lateral (a la derecha del pasillo, como en la foto)
+  (function escaleraPB(){
+    const z=-19.0;
+    cajaPB(.5,.12,2.0, matBl, 2.20-.24, 2.44, z);
+    cajaPB(.5,2.44,.1, matBl, 2.20-.24, 1.22, z-1.0);
+    cajaPB(.5,2.44,.1, matBl, 2.20-.24, 1.22, z+1.0);
+    planoPB(1.9,2.4, new THREE.MeshBasicMaterial({color:0x05070a}), 2.18, 1.2, z, 0, -Math.PI/2);
+    for(let i=0;i<6;i++) cajaPB(.42,.07,1.7, matMar, 2.20-(.46-i*.085), .10+i*.19, z);
+    planoPB(.62,.2, SALIDA(), 2.17, 2.72, z, 0, -Math.PI/2);
+    bloque(1.45,z-1.1,2.4,z+1.1);
+    registro({x:1.4,z:z,zona:"el pasillo largo",etiqueta:"mirar debajo del escalón"});
+  })();
+
+  /* ================= SALA DEL ASCENSOR (arranque del nivel) ================= */
+  (function sala(){
+    const az=(PB.ascensor.z1+PB.ascensor.z2)/2, aw=4.4, al=PB.ascensor.z2-PB.ascensor.z1;
+    planoPB(aw,al,matPiso,0,.002,az,-Math.PI/2,0);
+    planoPB(aw,al,matTe,0,ASC_ALTO,az,Math.PI/2,0);
+    planoPB(al,ASC_ALTO,matP,-2.20,ASC_ALTO/2,az,0, Math.PI/2);
+    planoPB(al,ASC_ALTO,matP, 2.20,ASC_ALTO/2,az,0,-Math.PI/2);
+    planoPB(aw,ASC_ALTO,matP,0,ASC_ALTO/2,PB.ascensor.z1,0,0);
+    // marco angosto gris hacia el pasillo
+    const zm=PB.ascensor.z2;
+    cajaPB((aw-1.1)/2,ASC_ALTO,.3, matGris, -(aw+1.1)/4, ASC_ALTO/2, zm);
+    cajaPB((aw-1.1)/2,ASC_ALTO,.3, matGris,  (aw+1.1)/4, ASC_ALTO/2, zm);
+    cajaPB(1.2,ASC_ALTO-2.4,.3, matGris, 0, ASC_ALTO-(ASC_ALTO-2.4)/2, zm);
+    cajaPB(.16,2.45,.4, matGris, -.60, 1.22, zm);
+    cajaPB(.16,2.45,.4, matGris,  .60, 1.22, zm);
+    cajaPB(1.36,.16,.4, matGris, 0, 2.42, zm);
+    // ascensor
+    const zA=PB.ascensor.z1+.06;
+    cajaPB(.62,2.25,.09, matGris, -.62, 1.13, zA);
+    cajaPB(.62,2.25,.09, matGris,  .00, 1.13, zA);
+    cajaPB(.04,2.25,.11, new THREE.MeshLambertMaterial({color:0x5b646b}), -.31,1.13,zA+.01);
+    cajaPB(1.5,.14,.16, matGris, -.31, 2.32, zA+.02);
+    cajaPB(.12,.2,.05, new THREE.MeshLambertMaterial({color:0xb9bcbd}), .35,1.25,zA+.04);
+    cajaPB(.04,.04,.03, new THREE.MeshBasicMaterial({color:0xd94a35}), .35,1.25,zA+.07);
+    cajaPB(1.5,.05,.5, matNe, -.31, .02, zA+.32);
+    interactivos.push({tipo:"info", x:-.31, z:zA+1.0, r:1.9, etiqueta:"llamar al ascensor",
+      texto:"Apretás el botón. No se enciende.\nDel otro lado de la chapa no se escucha nada.\nNi el motor, ni los cables. Nada."});
+    // mesa y silla amarilla
+    mesaPB(1.35, -40.0, 0); sillaPB(.85, -40.0, 0xd8c23a, Math.PI/2);
+    registro({x:1.35,z:-40.0,zona:"la sala del ascensor",etiqueta:"revisar la mesa"});
+    // puerta blanca con ventanita
+    cajaPB(.08,2.1,.95, matBl, 2.14, 1.05, -39.2);
+    planoPB(.5,.62, matVid, 2.08, 1.62, -39.2, 0, -Math.PI/2);
+    panelTecho(0,az,ASC_ALTO-.28,1.0,9);
+  })();
+
+  /* ============================ HALL DE ENTRADA ============================ */
+  const hcx=(PB.hall.x1+PB.hall.x2)/2, hcz=(PB.hall.z1+PB.hall.z2)/2;
+  const hw=PB.hall.x2-PB.hall.x1, hl=PB.hall.z2-PB.hall.z1;
+  planoPB(hw,hl,matPisoH,hcx,0,hcz,-Math.PI/2,0);
+  planoPB(hw,hl,matTe,hcx,HALL_ALTO,hcz,Math.PI/2,0);
+  // paredes norte y sur del hall, con la boca del pasillo y la del fondo
+  [[PB.hall.z1,0],[PB.hall.z2,Math.PI]].forEach(([zz,rot])=>{
+    const izq=(-2.2)-PB.hall.x1, der=PB.hall.x2-2.2;
+    planoPB(izq,HALL_ALTO,matPh,PB.hall.x1+izq/2,HALL_ALTO/2,zz,0,rot);
+    planoPB(der,HALL_ALTO,matPh,2.2+der/2,HALL_ALTO/2,zz,0,rot);
+    cajaPB(4.4,HALL_ALTO-PAS_ALTO,.3, matBl, 0, PAS_ALTO+(HALL_ALTO-PAS_ALTO)/2, zz);
+    bloque(PB.hall.x1,zz-.35,-2.25,zz+.35);
+    bloque(2.25,zz-.35,PB.hall.x2,zz+.35);
+  });
+
+  /* --- PARED OESTE: el PORTÓN de salida (foto del portón) --- */
+  (function porton(){
+    const xp=PB.hall.x2;
+    planoPB(hl,HALL_ALTO,matPh,xp,HALL_ALTO/2,hcz,0,-Math.PI/2);
+    const z0=-1.0;
+    // marco gris grueso
+    cajaPB(.34,3.5,.16, matGris, xp-.17, 1.75, z0-1.42);
+    cajaPB(.34,3.5,.16, matGris, xp-.17, 1.75, z0+1.42);
+    cajaPB(.34,.16,3.0, matGris, xp-.17, 3.42, z0);
+    cajaPB(.34,.14,3.0, matGris, xp-.17, 2.42, z0);
+    // banderola
+    planoPB(2.7,.92, matVid, xp-.06, 2.92, z0, 0, -Math.PI/2);
+    // dos hojas: chapa abajo, vidrio arriba
+    [-.66,.66].forEach(dz=>{
+      cajaPB(.1,2.3,1.28, matBl, xp-.10, 1.20, z0+dz);
+      planoPB(1.12,.92, matVid, xp-.05, 1.78, z0+dz, 0, -Math.PI/2);
+      cajaPB(.11,.06,1.2, matGrisC, xp-.10, 1.28, z0+dz);
+      cajaPB(.12,.34,.05, new THREE.MeshLambertMaterial({color:0x6a5a2a}), xp-.09, 1.02, z0+(dz>0?-.10:.10));
+    });
+    cajaPB(.12,2.3,.06, matGrisC, xp-.10, 1.20, z0);              // junta central
+    cajaPB(.13,.1,.1, matNe, xp-.08, 1.12, z0);                   // cerradura
+    // cadena y candado
+    const cad=cajaPB(.06,.06,.9, matMetal, xp-.16, 1.06, z0);
+    const can=cajaPB(.1,.16,.06, new THREE.MeshLambertMaterial({color:0xb8a03a}), xp-.18, .96, z0);
+    // carteles
+    planoPB(.8,.34, cartel("SALIDA\nDE EMERGENCIA","#f2f7f3","#1f8a4c",30), xp-.06, 3.78, z0, 0, -Math.PI/2);
+    planoPB(.62,.2, SALIDA(), xp-.06, 2.05, z0+2.4, 0, -Math.PI/2);
+    planoPB(.62,.2, SALIDA(), xp-.06, 2.05, z0-2.4, 0, -Math.PI/2);
+    // bandeja portacables cruzando arriba (como en la foto)
+    cajaPB(.44,.06,3.6, matGalva, xp-.55, 4.05, z0);
+    cajaPB(.16,.1,.16, matNe, xp-.55, 3.94, z0);
+    interactivos.push({tipo:"porton", x:xp-1.0, z:z0, r:2.3, cadena:cad, candado:can,
+                       etiqueta:"abrir el portón"});
+  })();
+
+  /* --- PARED OESTE: ventanales, puertas y el BUSTO enfrentado al portón --- */
+  (function frenteOeste(){
+    const xp=PB.hall.x1;
+    planoPB(hl,HALL_ALTO,matPh,xp,HALL_ALTO/2,hcz,0,Math.PI/2);
+    // ventanales de vidrio armado a los costados
+    [-4.4,2.4].forEach(zz=>{
+      planoPB(2.6,2.6, matVid, xp+.06, 2.15, zz, 0, Math.PI/2);
+      for(let i=0;i<4;i++) cajaPB(.1,2.7,.09, matBl, xp+.08, 2.15, zz-1.3+i*.87);
+      cajaPB(.1,.12,2.7, matBl, xp+.08, 3.45, zz);
+      cajaPB(.1,.12,2.7, matBl, xp+.08, 1.35, zz);
+      cajaPB(.1,.12,2.7, matBl, xp+.08, .85, zz);
+      planoPB(2.6,.55, matVid, xp+.06, 3.75, zz, 0, Math.PI/2);
+    });
+    // puertas vidriadas detrás del busto
+    const z0=-1.0;
+    [-.62,.62].forEach(dz=>{
+      cajaPB(.1,2.3,1.2, matBl, xp+.10, 1.18, z0+dz);
+      planoPB(1.04,1.3, matVid, xp+.05, 1.72, z0+dz, 0, Math.PI/2);
+    });
+    cajaPB(.12,2.5,.09, matBl, xp+.10, 1.25, z0);
+    cajaPB(.12,.12,2.6, matBl, xp+.10, 2.45, z0);
+    planoPB(2.6,.9, matVid, xp+.06, 3.05, z0, 0, Math.PI/2);
+    // banderitas argentinas pegadas en el vidrio
+    for(let i=0;i<3;i++)
+      planoPB(.22,.15, new THREE.MeshBasicMaterial({color:0x74b3e0}), xp+.12, 1.95-i*.30, z0+.95, 0, Math.PI/2);
+    // campana de bronce
+    cajaPB(.1,.24,.1, matBl, xp+.09, 2.62, z0-1.65);
+    const camp=new THREE.Mesh(new THREE.CylinderGeometry(.09,.14,.22,10),
+      new THREE.MeshLambertMaterial({color:0x8a6f2a}));
+    camp.position.set(xp+.22,2.38,z0-1.65); mundoPlanta.add(camp);
+    interactivos.push({tipo:"campana", x:xp+1.1, z:z0-1.65, r:1.8, etiqueta:"tocar la campana"});
+    // macetas
+    [[xp+.5,z0-2.4],[xp+.5,z0+1.9]].forEach(([x,z])=>{
+      const m=new THREE.Mesh(new THREE.CylinderGeometry(.19,.15,.34,10),
+        new THREE.MeshLambertMaterial({color:0xb2603a})); m.position.set(x,.17,z); mundoPlanta.add(m);
+      for(let i=0;i<8;i++){
+        const h=new THREE.Mesh(new THREE.BoxGeometry(.05,.6,.02),
+          new THREE.MeshLambertMaterial({color:0x2f6b34}));
+        h.position.set(x+Math.cos(i)*.07,.6,z+Math.sin(i)*.07);
+        h.rotation.z=(Math.random()-.5)*.9; h.rotation.x=(Math.random()-.5)*.6; mundoPlanta.add(h);
+      }
+    });
+    registro({x:xp+1.3,z:z0+1.9,zona:"el hall de entrada",etiqueta:"revisar la maceta"});
+  })();
+
+  // BUSTO DE WILLIAM C. MORRIS, enfrentado al portón
+  (function busto(){
+    const x=-6.0, z=-1.0;
+    // el pedestal de mármol queda siempre donde está
+    const ped=new THREE.Group(); ped.position.set(x,0,z); ped.rotation.y=Math.PI;
+    mundoPlanta.add(ped);
+    const matLey=new THREE.MeshLambertMaterial({map:texPlana(texPedestal())});
+    const add=(m,g)=>{ g.add(m); return m; };
+    add(new THREE.Mesh(new THREE.BoxGeometry(.96,.22,.96), matMar), ped).position.y=.11;
+    add(new THREE.Mesh(new THREE.BoxGeometry(.84,.16,.84), matMar), ped).position.y=.29;
+    add(new THREE.Mesh(new THREE.BoxGeometry(.62,.98,.62), matMar), ped).position.y=.86;
+    const ley=add(new THREE.Mesh(new THREE.PlaneGeometry(.58,.92), matLey), ped);
+    ley.position.set(-.315,.86,0); ley.rotation.y=-Math.PI/2;
+    add(new THREE.Mesh(new THREE.BoxGeometry(.9,.12,.9), matMar), ped).position.y=1.41;
+
+    // el bronce: es lo que se baja y te camina atrás
+    const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=Math.PI;
+    mundoPlanta.add(g);
+    const bronce=new THREE.MeshLambertMaterial({color:0x3b3527});
+    const torso=new THREE.Mesh(new THREE.CylinderGeometry(.19,.33,.5,12), bronce);
+    torso.position.y=1.72; g.add(torso);
+    const hom=new THREE.Mesh(new THREE.BoxGeometry(.60,.14,.32), bronce); hom.position.y=1.56; g.add(hom);
+    const cab=new THREE.Mesh(new THREE.SphereGeometry(.19,14,12), bronce);
+    cab.position.y=2.10; cab.scale.set(1,1.12,.95); g.add(cab);
+    const pelo=new THREE.Mesh(new THREE.SphereGeometry(.205,14,12,0,Math.PI*2,0,Math.PI*.6), bronce);
+    pelo.position.y=2.12; g.add(pelo);
+    const big=new THREE.Mesh(new THREE.BoxGeometry(.13,.035,.06), bronce);
+    big.position.set(-.16,2.04,0); g.add(big);
+    const ojos=[-.055,.055].map(dz=>{
+      const o=new THREE.Mesh(new THREE.SphereGeometry(.028,8,8),
+        new THREE.MeshBasicMaterial({color:0x1a1710}));
+      o.position.set(-.155,2.13,dz); g.add(o); return o;
+    });
+    const luzOjos=new THREE.PointLight(0xff1608,0,7); luzOjos.position.set(-.35,2.1,0); g.add(luzOjos);
+
+    bloque(x-.55,z-.55,x+.55,z+.55);
+    bustoObj={grupo:g, ojos, luz:luzOjos, enojado:false, vel:C().velBusto, pasoT:0, base:{x,z}};
+    interactivos.push({tipo:"busto", x:x+1.1, z, r:2.0, etiqueta:"tocar la estatua"});
+    interactivos.push({tipo:"info", x:x+1.1, z:z+1.3, r:1.5, etiqueta:"leer el pedestal",
+      texto:"WILLIAM C. MORRIS · 1864-1932\nCONSAGRÓ SU VIDA A LA NIÑEZ\n\nLa chapita de bronce de arriba está floja."});
+    registro({x:x-1.1,z,zona:"el hall de entrada",etiqueta:"mirar detrás del pedestal"});
+  })();
+
+
+  // columnas del hall
+  [[-5.6,-4.6],[-5.6,2.2],[2.6,-4.6],[2.6,2.2]].forEach(([x,z])=>{
+    cajaPB(.62,HALL_ALTO,.62, matBl, x, HALL_ALTO/2, z);
+    cajaPB(.76,.16,.76, matGris, x, .08, z);
+    bloque(x-.36,z-.36,x+.36,z+.36);
+  });
+  // metegol rojo, mesas y sillas de colores (foto del hall)
+  (function metegolRojo(){
+    const g=new THREE.Group(); g.position.set(-8.2,0,-4.4); g.rotation.y=.2;
+    const rojo=new THREE.MeshLambertMaterial({color:0xb02a22});
+    const c=new THREE.Mesh(new THREE.BoxGeometry(.72,.24,1.32), rojo); c.position.y=.84; g.add(c);
+    const p=new THREE.Mesh(new THREE.PlaneGeometry(.58,1.18),
+      new THREE.MeshLambertMaterial({color:0x2f6b34}));
+    p.rotation.x=-Math.PI/2; p.position.y=.965; g.add(p);
+    for(let i=0;i<6;i++){
+      const b=new THREE.Mesh(new THREE.CylinderGeometry(.016,.016,1.05,6), matMetal);
+      b.rotation.z=Math.PI/2; b.position.set(0,1.0,-.5+i*.2); g.add(b);
+    }
+    [[-.29,-.58],[.29,-.58],[-.29,.58],[.29,.58]].forEach(([x,z])=>{
+      const q=new THREE.Mesh(new THREE.CylinderGeometry(.028,.028,.74,6), matMetal);
+      q.position.set(x,.37,z); g.add(q);
+    });
+    mundoPlanta.add(g); bloque(-8.7,-5.2,-7.7,-3.6);
+    registro({x:-7.4,z:-4.4,zona:"el hall de entrada",etiqueta:"revisar el metegol"});
+  })();
+  mesaPB(4.6,2.6,0); sillaPB(3.7,2.6,0x2f4fa8,Math.PI/2); sillaPB(5.5,2.6,0x3f8f4a,-Math.PI/2);
+  mesaPB(-7.6,1.8,Math.PI/2); sillaPB(-7.6,.9,0x1d2024,0);
+  registro({x:4.6,z:2.6,zona:"el hall de entrada",etiqueta:"revisar debajo de la mesa"});
+  registro({x:-7.6,z:1.8,zona:"el hall de entrada",etiqueta:"revisar la mochila"});
+  // cajas de cartón
+  cajaPB(.6,.4,.5, new THREE.MeshLambertMaterial({color:0xa88a5a}), -9.0,.20,3.2);
+  cajaPB(.5,.35,.45,new THREE.MeshLambertMaterial({color:0x9c7f52}), -9.0,.57,3.2);
+  bloque(-9.4,2.9,-8.6,3.5);
+  registro({x:-8.4,z:3.2,zona:"el hall de entrada",etiqueta:"abrir las cajas"});
+  // carteleras del hall
+  planoPB(2.4,1.5, matAf, 7.94, 1.95, -4.6, 0, -Math.PI/2);
+  interactivos.push({tipo:"info", x:6.9, z:-4.6, r:1.9, etiqueta:"leer la cartelera del hall",
+    texto:"ACTO DEL 25 DE MAYO — 4.º, 5.º Y 6.º GRADO.\nLISTA DE ASISTENCIA: faltan tres nombres, tachados.\nAbajo alguien escribió: «el busto pregunta»."});
+  // luces del hall
+  [[-7.5,-4.6],[-7.5,2.2],[-2.0,-1.0],[3.5,-4.6],[3.5,2.2],[6.0,-1.0]].forEach(([x,z])=>
+    panelTecho(x,z,HALL_ALTO-.55,1.05,14));
+
+  /* ===================== FONDO NORTE con la cortina roja ==================== */
+  (function fondo(){
+    const z1=PB.norte.z1, z2=PB.norte.z2, cz=(z1+z2)/2, lg=z2-z1;
+    planoPB(4.4,lg,matPiso,0,0,cz,-Math.PI/2,0);
+    planoPB(4.4,lg,matTe,0,PAS_ALTO,cz,Math.PI/2,0);
+    planoPB(lg,PAS_ALTO,matP,-2.20,PAS_ALTO/2,cz,0, Math.PI/2);
+    planoPB(lg,PAS_ALTO,matP, 2.20,PAS_ALTO/2,cz,0,-Math.PI/2);
+    planoPB(4.4,PAS_ALTO,matP,0,PAS_ALTO/2,z2,0,Math.PI);
+    bandeja(2.20,1,z1+1,z2-1,PAS_ALTO-.55);
+    panelTecho(0,z1+3,PAS_ALTO-.55,.95,12); panelTecho(0,z2-2.5,PAS_ALTO-.55,.95,12);
+    // el vano del fondo con la cortina roja
+    cajaPB(1.4,PAS_ALTO,.3, matP, -1.5, PAS_ALTO/2, z2-.15);
+    cajaPB(1.4,PAS_ALTO,.3, matP,  1.5, PAS_ALTO/2, z2-.15);
+    cajaPB(1.6,.9,.3, matP, 0, PAS_ALTO-.45, z2-.15);
+    planoPB(1.6,2.5, new THREE.MeshLambertMaterial({color:0x9c2230, side:THREE.DoubleSide}),
+            0, 1.25, z2-.32);
+    for(let i=0;i<9;i++) cajaPB(.04,2.5,.05, new THREE.MeshLambertMaterial({color:0x7d1a26}),
+                                -.7+i*.175, 1.25, z2-.34);
+    interactivos.push({tipo:"info", x:0, z:z2-1.4, r:2.0, etiqueta:"correr la cortina",
+      texto:"Detrás de la cortina hay otra puerta, cerrada con llave desde el otro lado.\nEn el vidrio, escrito con el dedo: «por acá no»."});
+    tacho(-1.80,z1+2.5,"el fondo del pasillo");
+    mesaPB(1.30,z2-3.0,0);
+    registro({x:1.30,z:z2-3.0,zona:"el fondo del pasillo",etiqueta:"revisar la mesa del fondo"});
+    planoPB(1.5,1.0, matAf, -2.13, 1.95, z1+4.0, 0, Math.PI/2);
+  })();
+
+  repartirSecretos();
+}
+
+/* mesas y sillas, usadas por varias partes del nivel */
+function mesaPB(x,z,rot){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot||0;
+  const bl=new THREE.MeshLambertMaterial({color:0xefede5});
+  const t=new THREE.Mesh(new THREE.BoxGeometry(1.3,.05,.68), bl); t.position.y=.75; g.add(t);
+  [[-.6,-.28],[.6,-.28],[-.6,.28],[.6,.28]].forEach(([px,pz])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.74,6), matMetal);
+    p.position.set(px,.37,pz); g.add(p);
+  });
+  mundoPlanta.add(g); bloque(x-.7,z-.4,x+.7,z+.4);
+}
+function sillaPB(x,z,col,rot){
+  const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=rot||0;
+  const m=new THREE.MeshLambertMaterial({color:col});
+  const as=new THREE.Mesh(new THREE.BoxGeometry(.4,.05,.4), m); as.position.y=.45; g.add(as);
+  const re=new THREE.Mesh(new THREE.BoxGeometry(.4,.42,.05), m); re.position.set(0,.68,-.18); g.add(re);
+  [[-.16,-.16],[.16,-.16],[-.16,.16],[.16,.16]].forEach(([px,pz])=>{
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.45,6), matMetal);
+    p.position.set(px,.22,pz); g.add(p);
+  });
+  mundoPlanta.add(g);
+}
+
+/* ---- dónde queda escondida la llave: distinto en cada partida ---- */
+const VACIOS=[
+  "Papeles mojados y una cáscara de mandarina. Nada más.",
+  "Polvo, un broche roto y media tiza.",
+  "Una hoja de cuaderno con un dibujo de un perro. Nada.",
+  "Un guante de lana sin par. Nada útil.",
+  "Vacío. Huele a lavandina vieja.",
+  "Sólo telarañas y un tornillo suelto.",
+  "Un envoltorio de alfajor de 2003. Nada.",
+  "Un carnet vencido de la biblioteca. No sirve.",
+  "Un cuaderno de tapa dura, todas las hojas arrancadas.",
+  "Una campera de niño, doblada. Nadie vino a buscarla."
+];
+function repartirSecretos(){
+  const regs=interactivos.filter(i=>i.tipo==="registro");
+  for(let i=regs.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1)); [regs[i],regs[j]]=[regs[j],regs[i]];
+  }
+  regs.forEach((r,i)=>{ r.contiene=null; r.usado=false; r.vacio=VACIOS[i%VACIOS.length]; });
+  escondite=regs[0];                       // acá va a aparecer la llave si respondés mal
+  zonaDeLaLlave=escondite.zona;
+  if(regs[1]) regs[1].contiene="cuaderno";
+  if(regs[2]) regs[2].contiene="pila";
+  if(regs[3]) regs[3].contiene="pila";
+}
+function prenderLuzPlanta(){
+  luzPlanta=true;
+  lucesPB.forEach((L,i)=>{
+    setTimeout(()=>{
+      L.luz.intensity=1.15;
+      if(L.panel) L.panel.material.color.setHex(0xf6f2e2);
+      Audio3.chispazo(.10);
+    }, i*80 + Math.random()*150);
+  });
+  ambiente.intensity=HARD?.20:.30; ambiente.color.setHex(0x3c4650);
+}
+
+/* ==========================================================
+   6. JUGADOR, COLISIONES Y ESTADO
+   ========================================================== */
+const jugador = {
+  pos:new THREE.Vector3(0,1.60,-.9),
+  yaw:0, pitch:0,
+  vel:new THREE.Vector3(),
+  bateria:100, luzOn:true, pasoT:0, bob:0,
+  stam:100, sinAire:false, jadeoT:0, faseJadeo:0
+};
+let modo="pasillo", jugando=false, cazado=false, tiempo=0, latidoT=0, risaT=rnd(6,12);
+
+/* ================= DIFICULTAD =================
+   FÁCIL deja el juego exactamente como estaba.
+   HARDCORE cambia números y enciende los comportamientos nuevos.  */
+let HARD=false;
+const CFG={
+  facil:{ nieblaPas:.052, nieblaBack:.075, nieblaPB:.045, ambPas:.14, ambBack:.32, ambPB:.13,
+          gastoLinterna:1.15, recargaLinterna:.55, gastoStam:23, recupStam:17,
+          segAcertijo:10, velCosa:2.35, velNena:3.55, velBusto:1.15,
+          risaMin:9, risaMax:20, flujo:false, cine:false, modelos:false },
+  hard :{ nieblaPas:.072, nieblaBack:.105, nieblaPB:.066, ambPas:.075, ambBack:.20, ambPB:.075,
+          gastoLinterna:1.95, recargaLinterna:0, gastoStam:23, recupStam:17,
+          segAcertijo:6,  velCosa:2.35, velNena:3.55, velBusto:1.45,
+          risaMin:5, risaMax:11, flujo:true, cine:true, modelos:true }
+};
+const C=()=>HARD?CFG.hard:CFG.facil;
+
+// rectángulos transitables del pasillo
+const zonas = [
+  {x1:-MX+.42, x2:MX-.42, z1:Z_FONDO+.55, z2:Z_ATRAS-.35},            // pasillo
+  {x1:-.42, x2:.42, z1:Z_ATRAS-.45, z2:Z_ATRAS+.5},                   // vano angosto
+  {x1:SALA.x1+.35, x2:SALA.x2-.35, z1:Z_ATRAS+.35, z2:SALA.z2-.6}     // hall del ascensor
+];
+// huecos de escalera: se ven, no se entran
+const bloqueos = [
+  {x1:-MX-.2, x2:-MX+.72, z1:-9.60, z2:-7.60},   // hueco de escalera izquierda
+  {x1: MX-.72, x2: MX+.2, z1:-25.50, z2:-23.50}, // hueco de escalera derecha
+  {x1: MX-.95, x2: MX+.2, z1:-4.30, z2:-2.70},   // metegol
+  {x1:-MX-.2, x2:-MX+.55, z1:-2.20, z2:-.50}     // tablero eléctrico
+];
+function libreEnPasillo(x,z){
+  for(const b of bloqueos) if(x>b.x1&&x<b.x2&&z>b.z1&&z<b.z2) return false;
+  for(const r of zonas) if(x>r.x1&&x<r.x2&&z>r.z1&&z<r.z2) return true;
+  return false;
+}
+function libreEnBack(x,z,r=.34){
+  if(!grilla.length) return false;
+  for(const [dx,dz] of [[-r,-r],[r,-r],[-r,r],[r,r]]){
+    const cx=Math.round((x+dx)/CEL+(N-1)/2), cy=Math.round((z+dz)/CEL+(N-1)/2);
+    if(cx<0||cy<0||cx>=N||cy>=N) return false;
+    if(grilla[cy][cx]===1) return false;
+  }
+  return true;
+}
+/* el busto sólo respeta paredes: los muebles los pasa por arriba */
+function zonaPlanta(x,z){
+  for(const r of PB_ZONAS){
+    const m = r.m===undefined ? .3 : r.m;
+    if(x>r.x1+m && x<r.x2-m && z>r.z1+m && z<r.z2-m) return true;
+  }
+  return false;
+}
+function librePlanta(x,z){
+  for(const b of PB_BLOQUES) if(x>b.x1&&x<b.x2&&z>b.z1&&z<b.z2) return false;
+  for(const r of PB_ZONAS){
+    const m = r.m===undefined ? .3 : r.m;
+    if(x>r.x1+m && x<r.x2-m && z>r.z1+m && z<r.z2-m) return true;
+  }
+  return false;
+}
+// durante el fundido de transición el laberinto todavía no existe: no se camina
+const libre = (x,z)=> modo==="pasillo" ? libreEnPasillo(x,z)
+                    : modo==="backrooms" ? libreEnBack(x,z)
+                    : modo==="planta" ? librePlanta(x,z) : false;
+
+/* ---------- interacción con E (nivel 3) ---------- */
+function interactivoCerca(){
+  if(modo!=="planta") return null;
+  let best=null, bd=1e9;
+  const fx=-Math.sin(jugador.yaw), fz=-Math.cos(jugador.yaw);
+  for(const it of interactivos){
+    const dx=it.x-jugador.pos.x, dz=it.z-jugador.pos.z, d=Math.hypot(dx,dz);
+    if(d>(it.r||1.8)) continue;
+    if(d>0.25 && (dx*fx+dz*fz)/d < 0.30) continue;   // hay que estar mirándolo
+    if(d<bd){ bd=d; best=it; }
+  }
+  return best;
+}
+function objetivo(html){ $("objetivo").innerHTML=html; }
+
+/* ================= EL ACERTIJO DEL BUSTO ================= */
+let acertijoActivo=false, acertijoOk=0, acertijoTO=null;
+function abrirAcertijo(){
+  if(acertijoActivo||acertijoResuelto||acertijoFallado) return;
+  acertijoActivo=true;
+  document.exitPointerLock && document.exitPointerLock();
+  mostrarCursor();
+  Audio3.campana();
+  const ops=["+","−","×"], op=ops[Math.floor(Math.random()*3)];
+  let a,b,r;
+  if(op==="+"){ a=12+ri(70); b=12+ri(70); r=a+b; }
+  else if(op==="−"){ a=45+ri(60); b=6+ri(38); r=a-b; }
+  else { a=3+ri(11); b=3+ri(11); r=a*b; }
+  const set=new Set([r]);
+  while(set.size<4){
+    const d=r + (Math.random()<.5?-1:1)*(1+ri(op==="×"?12:9));
+    if(d>0) set.add(d);
+  }
+  const lista=[...set];
+  for(let i=lista.length-1;i>0;i--){ const j=ri(i+1); [lista[i],lista[j]]=[lista[j],lista[i]]; }
+  acertijoOk=lista.indexOf(r);
+  $("preg").textContent = a+"  "+op+"  "+b;
+  $("ops").innerHTML = lista.map((v,i)=>`<button data-i="${i}"><b>${i+1}</b>${v}</button>`).join("");
+  $("ops").querySelectorAll("button").forEach(bt=>bt.onclick=()=>responder(+bt.dataset.i));
+  const bar=$("cuentaBar");
+  bar.style.transition="none"; bar.style.width="100%";
+  requestAnimationFrame(()=>{ bar.style.transition="width "+C().segAcertijo+"s linear"; bar.style.width="0%"; });
+  $("pistaAcertijo").textContent="ELEGÍ CON 1 · 2 · 3 · 4 — TENÉS "+C().segAcertijo+" SEGUNDOS";
+  $("acertijo").classList.remove("oculta");
+  clearTimeout(acertijoTO);
+  acertijoTO=setTimeout(()=>responder(-1), C().segAcertijo*1000);
+}
+function responder(i){
+  if(!acertijoActivo) return;
+  acertijoActivo=false; clearTimeout(acertijoTO);
+  $("acertijo").classList.add("oculta");
+  if(!esTactil && jugando) { try{ renderer.domElement.requestPointerLock(); }catch(e){} }
+
+  if(i===acertijoOk){
+    acertijoResuelto=true; tieneLlave=true;
+    Audio3.metal(); Audio3.campana();
+    susurrar("«CONSAGRÓ SU VIDA A LA NIÑEZ».\nEl bronce abre la mano y te deja una llave.",5600);
+    objetivo("<b>Objetivo:</b> abrí el portón y salí de la escuela · <b>[E]</b>");
+  } else {
+    acertijoFallado=true;
+    if(bustoObj){
+      bustoObj.enojado=true;
+      bustoObj.grupo.position.y=-.38;          // se baja del pedestal
+      Audio3.thumpPiedra();
+      bustoObj.ojos.forEach(o=>o.material=new THREE.MeshBasicMaterial({color:0xff1808}));
+      bustoObj.luz.intensity=1.6;
+    }
+    if(escondite){ escondite.contiene="llave"; escondite.usado=false; }
+    Audio3.grito(); Audio3.nivelDrone(.34);
+    susurrar((i<0?"Se te acabó el tiempo.":"Mal.")+"\nLos ojos se le prenden y baja del pedestal.\nLa llave quedó escondida en algún lado.",6000);
+    objetivo("<b>Objetivo:</b> encontrá la llave antes de que te alcance.<br>Revisá todo · <b>[E]</b>");
+  }
+}
+/* el busto camina despacio y no para nunca */
+function moverBusto(dt){
+  if(modo!=="planta" || !bustoObj || !bustoObj.enojado || acertijoActivo) return;
+  const g=bustoObj.grupo;
+  const dx=jugador.pos.x-g.position.x, dz=jugador.pos.z-g.position.z;
+  const d=Math.hypot(dx,dz);
+  if(d<1.0){ morir(bustoObj.grupo); return; }
+  if(HARD) bustoObj.vel=Math.min(C().velBusto+.9, bustoObj.vel+dt*0.02);
+  const nx=dx/d, nz=dz/d, v=bustoObj.vel*dt;
+  if(zonaPlanta(g.position.x+nx*v, g.position.z)) g.position.x+=nx*v;
+  if(zonaPlanta(g.position.x, g.position.z+nz*v)) g.position.z+=nz*v;
+  g.rotation.y=Math.atan2(nz,-nx);              // el frente del busto mira al jugador
+  g.position.y=-.38+Math.abs(Math.sin(tiempo*2.6))*.06;
+  bustoObj.luz.intensity=1.2+Math.sin(tiempo*6)*.5;
+  bustoObj.pasoT-=dt;
+  if(bustoObj.pasoT<=0){
+    Audio3.thumpPiedra ? Audio3.thumpPiedra() : Audio3.ruidito(160,.22,1.4);
+    bustoObj.pasoT=1.05;
+  }
+  latidoT-=dt;
+  if(latidoT<=0 && d<16){ Audio3.latido(clamp(.85-d*.04,.14,.85)); latidoT=clamp(d*.05,.4,1.1); }
+}
+function usarCercano(){
+  const it=interactivoCerca(); if(!it) return;
+
+  if(it.tipo==="tablero"){
+    if(luzPlanta){ susurrar("Ya está toda la luz que hay.",2200); return; }
+    Audio3.termica(); prenderLuzPlanta();
+    susurrar("Subís la llave térmica.\nLos tubos van prendiendo de a uno.",4200);
+    objetivo("<b>Objetivo:</b> encontrá la llave del portón.<br>Revisá todo lo que se pueda abrir · <b>[E]</b>");
+    return;
+  }
+  if(it.tipo==="registro"){
+    if(!luzPlanta){ susurrar("Está demasiado oscuro para revisar esto.\nHabría que devolver la luz.",3800); return; }
+    if(it.usado){ susurrar("Ya lo revisaste.",1600); return; }
+    it.usado=true;
+    if(it.contiene==="llave"){
+      tieneLlave=true; Audio3.metal();
+      susurrar("Una llave de bronce con un llavero de cartón:\nPORTÓN.",4800);
+      objetivo("<b>Objetivo:</b> abrí el portón del hall de entrada · <b>[E]</b>");
+    } else if(it.contiene==="cuaderno"){
+      pistaLeida=true; Audio3.papel();
+      susurrar("Cuaderno del casero:\n«la llave del portón quedó en "+zonaDeLaLlave+"».",5400);
+      if(!tieneLlave) objetivo("<b>Objetivo:</b> la llave está en "+zonaDeLaLlave+" · <b>[E]</b>");
+    } else if(it.contiene==="pila"){
+      jugador.bateria=clamp(jugador.bateria+45,0,100); Audio3.ruidito(920,.13,2);
+      susurrar("Un par de pilas. La linterna respira.",3000);
+    } else { Audio3.papel(); susurrar(it.vacio||"Nada.",3000); }
+    return;
+  }
+  if(it.tipo==="campana"){
+    Audio3.campana();
+    susurrar("La campana suena mucho más fuerte de lo que esperabas.",3400);
+    setTimeout(()=>{ if(modo==="planta") Audio3.risa(.35, rnd(-1,1)); }, 2600);
+    return;
+  }
+  if(it.tipo==="info"){ Audio3.ruidito(700,.05,1); susurrar(it.texto,5200); return; }
+  if(it.tipo==="busto"){
+    if(tieneLlave || acertijoResuelto){ susurrar("Ya te dio lo que tenía.",2400); return; }
+    if(acertijoFallado){ susurrar("Ya no está en el pedestal.\nY no piensa volver.",3000); return; }
+    abrirAcertijo(); return;
+  }
+  if(it.tipo==="porton"){
+    if(tieneLlave){ salirDeLaEscuela(); }
+    else { Audio3.metal(); susurrar("El portón está encadenado.\nEl candado es viejo, pero aguanta.",3600); }
+  }
+}
+
+/* ¿hay pared entre dos puntos del laberinto? */
+function lineaLibre(ax,az,bx,bz){
+  const dx=bx-ax, dz=bz-az, d=Math.hypot(dx,dz);
+  const pasos=Math.ceil(d/(CEL*0.35));
+  for(let i=1;i<pasos;i++){
+    const t=i/pasos;
+    const cx=Math.round((ax+dx*t)/CEL+(N-1)/2), cy=Math.round((az+dz*t)/CEL+(N-1)/2);
+    if(cx<0||cy<0||cx>=N||cy>=N) return false;
+    if(grilla[cy][cx]===1) return false;
+  }
+  return true;
+}
+/* ¿la estás mirando? (cono de visión + linterna + sin paredes en el medio) */
+function laMiro(p){
+  const dx=p.x-jugador.pos.x, dz=p.z-jugador.pos.z, d=Math.hypot(dx,dz);
+  if(d>20||d<0.001) return false;
+  const fx=-Math.sin(jugador.yaw), fz=-Math.cos(jugador.yaw);
+  if((dx*fx+dz*fz)/d < 0.62) return false;
+  if(!jugador.luzOn && d>6) return false;
+  return lineaLibre(jugador.pos.x,jugador.pos.z,p.x,p.z);
+}
+
+/* ==========================================================
+   7. CONTROLES
+   ========================================================== */
+const teclas={};
+addEventListener("keydown",e=>{
+  teclas[e.code]=true;
+  if(e.code==="KeyF") alternarLinterna();
+  if(e.code==="KeyP" && !acertijoActivo){ if(jugando) pausar(); else if(!$("pausa").classList.contains("oculta")) reanudar(); }
+  if(e.code==="KeyE" && jugando && !acertijoActivo) usarCercano();
+  if(acertijoActivo && /^Digit[1-4]$/.test(e.code)) responder(+e.code.slice(5)-1);
+  if(["KeyW","KeyA","KeyS","KeyD","Space"].includes(e.code)) e.preventDefault();
+});
+addEventListener("keyup",e=>teclas[e.code]=false);
+
+/* ---- pausa y cursor ----------------------------------------------------
+   Al soltar el pointer lock (ESC, F11, cambiar de pestaña) el juego se
+   pausa en vez de seguir corriendo, y se fuerza el repintado del cursor:
+   Chrome a veces lo deja escondido si se salió de pantalla completa
+   mientras el mouse estaba capturado.                                    */
+function mostrarCursor(){
+  document.body.style.cursor="none";
+  requestAnimationFrame(()=>{ document.body.style.cursor="default"; });
+}
+function pausar(){
+  if(!jugando || acertijoActivo) return;
+  jugando=false;
+  if(document.pointerLockElement) document.exitPointerLock && document.exitPointerLock();
+  mostrarCursor();
+  $("pausa").classList.remove("oculta");
+}
+function reanudar(){
+  $("pausa").classList.add("oculta");
+  jugando=true;
+  if(!esTactil){ try{ renderer.domElement.requestPointerLock(); }catch(e){} }
+}
+function pantallaCompleta(){
+  const d=document.documentElement;
+  if(!document.fullscreenElement){ (d.requestFullscreen||d.webkitRequestFullscreen||(()=>{})).call(d); }
+  else { (document.exitFullscreen||document.webkitExitFullscreen||(()=>{})).call(document); }
+}
+document.addEventListener("pointerlockchange",()=>{
+  if(document.pointerLockElement===renderer.domElement) return;
+  mostrarCursor();
+  if(jugando && !esTactil && !acertijoActivo) pausar();
+});
+document.addEventListener("fullscreenchange", mostrarCursor);
+addEventListener("blur", ()=>{ if(jugando) pausar(); });
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden && jugando) pausar(); });
+addEventListener("beforeunload", ()=>{ if(document.pointerLockElement) document.exitPointerLock(); });
+addEventListener("pagehide", ()=>{ if(document.pointerLockElement) document.exitPointerLock(); });
+
+renderer.domElement.addEventListener("click",()=>{
+  if(jugando && !esTactil && !acertijoActivo) renderer.domElement.requestPointerLock();
+});
+addEventListener("mousemove",e=>{
+  if(document.pointerLockElement!==renderer.domElement) return;
+  jugador.yaw   -= e.movementX*0.0022;
+  jugador.pitch  = clamp(jugador.pitch - e.movementY*0.0022, -1.35, 1.35);
+});
+
+function alternarLinterna(){
+  if(jugador.bateria<=0){ jugador.luzOn=false; return; }
+  jugador.luzOn=!jugador.luzOn;
+  Audio3.chispazo(.12);
+}
+
+// táctil
+const esTactil = ("ontouchstart" in window) && innerWidth<1100;
+let stickVec={x:0,y:0}, stickId=null, mirarId=null, mirarPrev={x:0,y:0};
+if(esTactil){
+  $("tactil").classList.add("on");
+  const st=$("stick"), pt=st.querySelector("i");
+  const base=()=>st.getBoundingClientRect();
+  st.addEventListener("touchstart",e=>{ stickId=e.changedTouches[0].identifier; e.preventDefault(); },{passive:false});
+  addEventListener("touchmove",e=>{
+    for(const t of e.changedTouches){
+      if(t.identifier===stickId){
+        const b=base(), cx=b.left+b.width/2, cy=b.top+b.height/2;
+        let dx=(t.clientX-cx)/(b.width/2), dy=(t.clientY-cy)/(b.height/2);
+        const m=Math.hypot(dx,dy); if(m>1){dx/=m;dy/=m;}
+        stickVec={x:dx,y:dy};
+        pt.style.transform=`translate(${dx*32}px,${dy*32}px)`;
+      } else if(t.identifier===mirarId){
+        jugador.yaw   -= (t.clientX-mirarPrev.x)*0.006;
+        jugador.pitch  = clamp(jugador.pitch-(t.clientY-mirarPrev.y)*0.006,-1.35,1.35);
+        mirarPrev={x:t.clientX,y:t.clientY};
+      }
+    }
+  },{passive:false});
+  addEventListener("touchstart",e=>{
+    for(const t of e.changedTouches){
+      if(t.identifier!==stickId && mirarId===null && t.clientX>innerWidth*0.35){
+        mirarId=t.identifier; mirarPrev={x:t.clientX,y:t.clientY};
+      }
+    }
+  },{passive:false});
+  addEventListener("touchend",e=>{
+    for(const t of e.changedTouches){
+      if(t.identifier===stickId){ stickId=null; stickVec={x:0,y:0}; pt.style.transform=""; }
+      if(t.identifier===mirarId) mirarId=null;
+    }
+  });
+  $("btnLuz").addEventListener("touchstart",e=>{ e.preventDefault(); alternarLinterna(); },{passive:false});
+}
+
+/* ==========================================================
+   8. TRANSICIONES Y MENSAJES
+   ========================================================== */
+function susurrar(txt, ms=3400){
+  const s=$("susurro"); s.textContent=txt; s.classList.add("on");
+  clearTimeout(susurrar._t);
+  susurrar._t=setTimeout(()=>s.classList.remove("on"), ms);
+}
+function fundido(a){ $("flash").style.opacity=a; }
+
+function entrarBackrooms(){
+  if(modo==="backrooms") return;
+  modo="transicion";
+  Audio3.puerta(); Audio3.risa(.6,0);
+  fundido(1);
+  setTimeout(()=>{
+    construirBackrooms();
+    mundoPasillo.visible=false; mundoBack.visible=true;
+    scene.fog=new THREE.FogExp2(0x1a1405,C().nieblaBack);
+    scene.background=new THREE.Color(0x1a1405);
+    ambiente.color.setHex(0x3a3016); ambiente.intensity=C().ambBack;
+    jugador.pos.set(c2w(1),1.62,c2w(1));
+    jugador.yaw=Math.PI*.25; jugador.pitch=0;
+    modo="backrooms";
+    Audio3.nivelDrone(.24);
+    fundido(0);
+    susurrar("no se supone que estés acá", 5200);
+    objetivo("<b>Objetivo:</b> encontrá la puerta verde.<br>Hay dos cosas buscándote");
+  },700);
+}
+let cine=null;
+function morir(quien){
+  if(cazado) return;
+  cazado=true; jugando=false;
+  Audio3.grito();
+  if(document.pointerLockElement) document.exitPointerLock();
+  if(C().cine && quien && quien.position){
+    // la cámara gira sola hacia lo que te agarró y eso se te viene encima
+    cine={obj:quien, t:0};
+    Audio3.latido(.9);
+    return;
+  }
+  mostrarCursor();
+  fundido(1);
+  setTimeout(()=>{ $("fin").classList.remove("oculta"); },600);
+}
+function correrCine(dt){
+  cine.t+=dt;
+  const o=cine.obj;
+  const dx=o.position.x-jugador.pos.x, dz=o.position.z-jugador.pos.z;
+  const d=Math.max(.35,Math.hypot(dx,dz));
+  // girar hacia la entidad
+  let da=Math.atan2(-dx/d,-dz/d)-jugador.yaw;
+  while(da>Math.PI)da-=Math.PI*2; while(da<-Math.PI)da+=Math.PI*2;
+  jugador.yaw += da*Math.min(1,dt*10);
+  const objPitch=Math.atan2(1.72-jugador.pos.y, d);
+  jugador.pitch += (objPitch-jugador.pitch)*Math.min(1,dt*7);
+  // se te viene encima, pero se frena a un brazo: si entra en la cámara no se ve nada
+  const k=Math.min(1,dt*2.6), nueva=d+(.82-d)*k;
+  o.position.x = jugador.pos.x + (dx/d)*nueva;
+  o.position.z = jugador.pos.z + (dz/d)*nueva;
+  // tirón de zoom
+  camera.fov = 72 - 15*Math.min(1,cine.t/.9);
+  camera.updateProjectionMatrix();
+  // temblor
+  camera.position.set(jugador.pos.x + Math.sin(cine.t*47)*.018,
+                      jugador.pos.y + Math.cos(cine.t*39)*.022,
+                      jugador.pos.z + Math.cos(cine.t*53)*.018);
+  camera.rotation.y=jugador.yaw; camera.rotation.x=jugador.pitch;
+  if(cine.t>.95){
+    cine=null; camera.fov=72; camera.updateProjectionMatrix();
+    mostrarCursor(); fundido(1);
+    setTimeout(()=>{ $("fin").classList.remove("oculta"); },480);
+  }
+}
+function entrarPlantaBaja(){
+  if(modo!=="backrooms") return;
+  modo="transicion";
+  Audio3.puerta();
+  fundido(1);
+  setTimeout(()=>{
+    construirPlantaBaja();
+    mundoBack.visible=false; mundoPasillo.visible=false; mundoPlanta.visible=true;
+    scene.fog=new THREE.FogExp2(0x080b0f,C().nieblaPB);
+    scene.background=new THREE.Color(0x080b0f);
+    ambiente.color.setHex(0x2a3440); ambiente.intensity=C().ambPB;
+    jugador.pos.set(0,1.60,-40.4); jugador.yaw=Math.PI; jugador.pitch=0;
+    modo="planta";
+    Audio3.nivelDrone(.12);
+    fundido(0);
+    susurrar("Planta baja. Saliste por la puerta del ascensor.\nLa escuela está cerrada con candado.",5600);
+    acertijoActivo=false; $("acertijo").classList.add("oculta");
+    objetivo("<b>Objetivo:</b> devolvé la luz.<br>El tablero general está en el pasillo largo · <b>[E]</b>");
+  },700);
+}
+function salirDeLaEscuela(){
+  jugando=false;
+  document.exitPointerLock && document.exitPointerLock();
+  Audio3.metal(); Audio3.puerta();
+  mostrarCursor();
+  fundido(1);
+  setTimeout(()=>{ $("ganaste").classList.remove("oculta"); },700);
+}
+function reiniciar(){
+  cazado=false; cine=null; flujo=null; modo="pasillo";
+  camera.fov=72; camera.updateProjectionMatrix();
+  mundoPasillo.visible=true; mundoBack.visible=false; mundoPlanta.visible=false;
+  interactivos=[]; luzPlanta=false; tieneLlave=false;
+  acertijoActivo=false; acertijoFallado=false; acertijoResuelto=false;
+  clearTimeout(acertijoTO); $("acertijo").classList.add("oculta");
+  $("pausa").classList.add("oculta");
+  jugador.stam=100; jugador.sinAire=false;
+  objetivo("<b>Objetivo:</b> salí del pasillo.<br>Las puertas del fondo, o el ascensor");
+  $("aguante").classList.remove("vacio");
+  scene.fog=new THREE.FogExp2(0x090c11,C().nieblaPas);
+  scene.background=new THREE.Color(0x090c11);
+  ambiente.color.setHex(0x22303f); ambiente.intensity=C().ambPas;
+  jugador.pos.set(0,1.60,-.9); jugador.yaw=0; jugador.pitch=0;
+  jugador.bateria=100; jugador.luzOn=true;
+  tiempo=0; risaT=rnd(6,12); vistaNena=false;
+  Audio3.nivelDrone(.16);
+  fundido(0);
+  $("fin").classList.add("oculta"); $("ganaste").classList.add("oculta");
+  jugando=true;
+  if(!esTactil) renderer.domElement.requestPointerLock();
+}
+
+scene.fog=new THREE.FogExp2(0x090c11,.052);
+scene.background=new THREE.Color(0x090c11);
+
+function empezar(hard){
+  HARD=!!hard;
+  $("modoTag").classList.toggle("on",HARD);
+  Audio3.init();
+  scene.fog=new THREE.FogExp2(0x090c11,C().nieblaPas);
+  ambiente.intensity=C().ambPas;
+  $("menu").classList.add("oculta");
+  objetivo("<b>Objetivo:</b> salí del pasillo.<br>Las puertas del fondo, o el ascensor");
+  jugando=true;
+  if(!esTactil){ try{ renderer.domElement.requestPointerLock(); }catch(e){} }
+  susurrar(HARD ? "esta vez no estás solo desde el principio"
+                : "las puertas del fondo… o el ascensor", 5000);
+}
+$("jugarFacil").onclick=()=>empezar(false);
+$("jugarHard").onclick =()=>empezar(true);
+$("seguir").onclick=reanudar;
+$("pantallaCompleta").onclick=()=>{ pantallaCompleta(); setTimeout(reanudar,120); };
+$("volverEmpezar").onclick=()=>{ $("pausa").classList.add("oculta"); reiniciar(); };
+$("reintentar").onclick=reiniciar;
+$("devuelta").onclick=reiniciar;
+
+/* ==========================================================
+   9. LOOP
+   ========================================================== */
+let ultimo=performance.now(), frame=0;
+const tmpV=new THREE.Vector3();
+
+function gestionarLuces(dt){
+  frame++;
+  if(modo==="planta") return;
+  for(const L of luces){
+    if(L.mundo!== (modo==="backrooms"?"backrooms":"pasillo")) { L.luz.visible=false; continue; }
+    L.t-=dt;
+    if(L.t<=0){
+      L.prendida=!L.prendida;
+      L.t = L.prendida ? rnd(1.5,14) : rnd(.05,.42);
+      if(L.panel) L.panel.material.color.setHex(L.prendida?0xf6f2e2:0x2a2a26);
+      const d=L.luz.position.distanceTo(jugador.pos);
+      if(!L.prendida && d<14) Audio3.chispazo(clamp(.28-d*.015,.04,.28));
+    }
+    const d=L.luz.position.distanceTo(jugador.pos);
+    L.luz.visible = L.prendida && d<20;
+    L.luz.intensity = L.prendida ? (modo==="backrooms"?.95:1.25)*(0.88+Math.sin(tiempo*22+L.luz.position.z)*0.12) : 0;
+  }
+}
+
+/* ciclo de caminata: brazos y piernas alternados con senos */
+function animarPaso(e, vel, dt){
+  if(!e.anim) return;
+  const a=e.anim;
+  a.fase += vel*dt*3.4;
+  const s1=Math.sin(a.fase), s2=Math.cos(a.fase*2);
+  a.piernas[0].rotation.x =  s1*a.ampP;
+  a.piernas[1].rotation.x = -s1*a.ampP;
+  a.brazos[0].rotation.x  = -s1*a.ampB + a.offB;
+  a.brazos[1].rotation.x  =  s1*a.ampB + a.offB;
+  e.grupo.position.y = Math.abs(s2)*0.03;
+}
+
+/* ===== campo de flujo: distancia hasta el jugador por todo el laberinto.
+   Con esto las entidades doblan esquinas en vez de encajarse en las paredes. */
+let flujo=null, flujoT=0;
+function calcularFlujo(){
+  const cx=Math.round(jugador.pos.x/CEL+(N-1)/2), cy=Math.round(jugador.pos.z/CEL+(N-1)/2);
+  if(cx<0||cy<0||cx>=N||cy>=N||!grilla.length||grilla[cy][cx]===1){ flujo=null; return; }
+  const d=new Int32Array(N*N).fill(-1), q=new Int32Array(N*N);
+  let qs=0,qe=0;
+  d[cy*N+cx]=0; q[qe++]=cy*N+cx;
+  while(qs<qe){
+    const i=q[qs++], x=i%N, y=(i/N)|0, dd=d[i];
+    const nb=[[x+1,y],[x-1,y],[x,y+1],[x,y-1]];
+    for(const [nx,ny] of nb){
+      if(nx<1||ny<1||nx>=N-1||ny>=N-1) continue;
+      const ni=ny*N+nx;
+      if(d[ni]!==-1||grilla[ny][nx]===1) continue;
+      d[ni]=dd+1; q[qe++]=ni;
+    }
+  }
+  flujo=d;
+}
+function pasoFlujo(px,pz){
+  if(!flujo) return null;
+  const cx=Math.round(px/CEL+(N-1)/2), cy=Math.round(pz/CEL+(N-1)/2);
+  if(cx<1||cy<1||cx>=N-1||cy>=N-1) return null;
+  const cur=flujo[cy*N+cx];
+  if(cur<=0) return null;                      // ya está en tu celda: que vaya derecho
+  let best=cur, bx=-1, by=-1;
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const nx=cx+dx, ny=cy+dy, v=flujo[ny*N+nx];
+    if(v>=0 && v<best){ best=v; bx=nx; by=ny; }
+  }
+  return bx<0 ? null : [c2w(bx), c2w(by)];
+}
+function moverEntidades(dt){
+  if(modo!=="backrooms" || !entidades.length) return;
+  let masCerca=99;
+
+  for(const e of entidades){
+    const p=e.grupo.position;
+    const dx=jugador.pos.x-p.x, dz=jugador.pos.z-p.z;
+    const dist=Math.hypot(dx,dz);
+    masCerca=Math.min(masCerca,dist);
+    if(dist<e.matar){ morir(e.grupo); return; }
+    const nx=dx/dist, nz=dz/dist;
+
+    if(e.tipo==="nena"){
+      // ángel llorón: sólo se mueve cuando no la estás mirando
+      const mirada=laMiro(p);
+      if(mirada){
+        if(!vistaNena){
+          vistaNena=true;
+          susurrar("no la mires… pero tampoco dejes de mirarla", 4200);
+        }
+        p.y=0;                                  // se queda clavada
+        if(e.anim) e.anim.brazos.concat(e.anim.piernas).forEach(m=>m.rotation.x*=.85);
+      } else {
+        const v=e.vel*dt*(dist>10?1.2:1);
+        let ax=nx, az=nz;
+        if(C().flujo){
+          const t=pasoFlujo(p.x,p.z);
+          if(t){ const ddx=t[0]-p.x, ddz=t[1]-p.z, dd=Math.hypot(ddx,ddz)||1; ax=ddx/dd; az=ddz/dd; }
+        }
+        if(libreEnBack(p.x+ax*v, p.z, .4)) p.x+=ax*v;
+        if(libreEnBack(p.x, p.z+az*v, .4)) p.z+=az*v;
+        p.y=e.anim?0:Math.abs(Math.sin(tiempo*9))*0.045;  // trotecito
+        animarPaso(e, e.vel, dt);
+        e.risaT-=dt;
+        if(e.risaT<=0 && dist<18){
+          Audio3.risa(clamp(.85-dist*.035,.18,.85), clamp(-nx,-1,1));
+          e.risaT=rnd(2.2,5.5);
+        }
+      }
+      e.grupo.rotation.y=Math.atan2(-dx,-dz);   // que te mire de frente
+    } else {
+      // el merodeador nunca para, pero siempre al mismo paso
+      const v=e.vel*dt;
+      let ax=nx, az=nz;
+      if(C().flujo){
+        const t=pasoFlujo(p.x,p.z);
+        if(t){ const ddx=t[0]-p.x, ddz=t[1]-p.z, dd=Math.hypot(ddx,ddz)||1; ax=ddx/dd; az=ddz/dd; }
+      }
+      if(libreEnBack(p.x+ax*v, p.z, .4)) p.x+=ax*v;
+      if(libreEnBack(p.x, p.z+az*v, .4)) p.z+=az*v;
+      e.grupo.rotation.y=Math.atan2(-dx,-dz);
+      p.y=e.anim?0:Math.sin(tiempo*7)*0.035;
+      animarPaso(e, e.vel, dt);
+    }
+  }
+
+  // latidos según la entidad más cercana
+  if(masCerca<15){
+    latidoT-=dt;
+    if(latidoT<=0){ Audio3.latido(clamp(.8-masCerca*.04,.12,.8)); latidoT=clamp(masCerca*.055,.42,1.1); }
+  }
+}
+
+function loop(){
+  requestAnimationFrame(loop);
+  const ahora=performance.now();
+  const dt=Math.min((ahora-ultimo)/1000, .05);
+  ultimo=ahora;
+
+  if(jugando){
+    tiempo+=dt;
+
+    /* --- movimiento --- */
+    let ade=0, lat=0;
+    if(teclas.KeyW) ade+=1;
+    if(teclas.KeyS) ade-=1;
+    if(teclas.KeyA) lat-=1;
+    if(teclas.KeyD) lat+=1;
+    if(esTactil){ ade-=stickVec.y; lat+=stickVec.x; }
+    if(acertijoActivo){ ade=0; lat=0; }
+    const mag=Math.hypot(ade,lat);
+    if(mag>1){ ade/=mag; lat/=mag; }
+
+    /* --- aguante: correr lo gasta; sin aire, el personaje jadea y no puede
+           volver a correr hasta recuperar un cuarto de la barra --- */
+    const quiereCorrer=(teclas.ShiftLeft||teclas.ShiftRight);
+    const seMueve=mag>0.01;
+    const corriendo = quiereCorrer && seMueve && !jugador.sinAire && jugador.stam>0;
+    if(corriendo){
+      jugador.stam=clamp(jugador.stam-dt*C().gastoStam,0,100);
+      if(jugador.stam<=0) jugador.sinAire=true;
+    } else {
+      jugador.stam=clamp(jugador.stam+dt*(jugador.sinAire?C().recupStam*.6:C().recupStam),0,100);
+      if(jugador.sinAire && jugador.stam>=25) jugador.sinAire=false;   // 1/4 de la barra
+    }
+    if(jugador.sinAire || (corriendo && jugador.stam<32)){
+      jugador.jadeoT-=dt;
+      if(jugador.jadeoT<=0){
+        jugador.faseJadeo=1-jugador.faseJadeo;
+        Audio3.jadeo(jugador.faseJadeo);
+        jugador.jadeoT = jugador.sinAire ? .60 : .82;
+      }
+    }
+    const vel=(corriendo?5.0:2.9);
+    const sin=Math.sin(jugador.yaw), cos=Math.cos(jugador.yaw);
+    const mx=(lat*cos - ade*sin)*vel*dt;
+    const mz=(-lat*sin - ade*cos)*vel*dt;
+
+    if(libre(jugador.pos.x+mx, jugador.pos.z)) jugador.pos.x+=mx;
+    if(libre(jugador.pos.x, jugador.pos.z+mz)) jugador.pos.z+=mz;
+
+    /* --- cabeceo y pasos --- */
+    const enMov=Math.hypot(mx,mz)>0.0008;
+    if(enMov){
+      jugador.bob+=dt*(corriendo?13:9);
+      jugador.pasoT-=dt*(corriendo?1.7:1);
+      if(jugador.pasoT<=0){ Audio3.paso(); jugador.pasoT=.52; }
+    }
+    camera.position.set(
+      jugador.pos.x,
+      jugador.pos.y + Math.sin(jugador.bob)*0.035,
+      jugador.pos.z
+    );
+    camera.rotation.y=jugador.yaw;
+    camera.rotation.x=jugador.pitch;
+
+    /* --- batería --- */
+    if(jugador.luzOn){
+      jugador.bateria=clamp(jugador.bateria-dt*C().gastoLinterna,0,100);
+      if(jugador.bateria<=0){ jugador.luzOn=false; susurrar("se quedó sin pila", 3000); }
+    } else {
+      jugador.bateria=clamp(jugador.bateria+dt*C().recargaLinterna,0,100);
+    }
+    const bajo=jugador.bateria<22;
+    const parp=bajo ? (Math.random()<0.06?0:1) : 1;
+    linterna.intensity = jugador.luzOn ? 2.6*parp*(0.55+jugador.bateria/100*0.45) : 0;
+    halo.intensity     = jugador.luzOn ? .45*parp : 0;
+    $("pila").style.width = jugador.bateria.toFixed(0)+"%";
+    $("pila").style.background = bajo ? "#8b1a1a" : "#e8e4d9";
+    $("stam").style.width = jugador.stam.toFixed(0)+"%";
+    $("stam").style.background = jugador.sinAire ? "#8b1a1a"
+                               : jugador.stam<32 ? "#c9a24a" : "#cdd6c8";
+    $("aguante").classList.toggle("vacio", jugador.sinAire);
+
+    /* --- luces del ambiente --- */
+    gestionarLuces(dt);
+
+    /* --- sustos del pasillo --- */
+    if(modo==="pasillo"){
+      risaT-=dt;
+      if(risaT<=0){
+        Audio3.risa(rnd(.25,.5), rnd(-1,1));
+        risaT=rnd(C().risaMin,C().risaMax);
+        if(Math.random()<.35) susurrar(["…contá hasta diez","estoy atrás tuyo","seguí caminando","¿jugás?"][Math.floor(Math.random()*4)], 3000);
+      }
+      // triggers
+      if(jugador.pos.z < Z_FONDO+2.0) entrarBackrooms();
+      if(jugador.pos.z > SALA.z2-1.45 && jugador.pos.x < .35 && jugador.pos.x > -1.7) entrarBackrooms();
+    }
+
+    /* --- planta baja: el busto --- */
+    if(modo==="planta") moverBusto(dt);
+
+    /* --- backrooms --- */
+    if(modo==="backrooms"){
+      if(C().flujo){ flujoT-=dt; if(flujoT<=0){ calcularFlujo(); flujoT=.35; } }
+      moverEntidades(dt);
+      const sx=c2w(salidaCelda.x), sz=c2w(salidaCelda.y);
+      if(Math.hypot(jugador.pos.x-sx, jugador.pos.z-sz) < 1.2) entrarPlantaBaja();
+    }
+
+    /* --- reloj: hora completa, corre 10 veces más rápido --- */
+    const t0=3*3600+47*60, seg=Math.floor(t0+tiempo*10);
+    const hh=Math.floor(seg/3600)%24, mm=Math.floor(seg/60)%60, ss=seg%60;
+    $("reloj").textContent = String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")
+                            +":"+String(ss).padStart(2,"0");
+
+    /* --- cartel de acción del nivel 3 --- */
+    if(modo==="planta"){
+      const it=interactivoCerca(), el=$("accion");
+      if(it){ el.textContent="[E]  "+it.etiqueta; el.style.opacity=1; }
+      else el.style.opacity=0;
+    } else $("accion").style.opacity=0;
+  }
+
+  if(cine) correrCine(dt);
+
+  renderer.render(scene,camera);
+}
+
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+$("cargando").style.display="none";
+loop();
+</script>
+</body>
+</html>
